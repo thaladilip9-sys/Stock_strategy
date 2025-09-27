@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  trading-bot:
+    build: .
+    container_name: stock-breakout-bot
+    restart: unless-stopped
+    environment:
+      # Copy these from your .env file
+      - SENDER_EMAIL=${SENDER_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - SCAN_INTERVAL_MINUTES=${SCAN_INTERVAL_MINUTES:-15}
+      - BREAKOUT_THRESHOLD_PERCENT=${BREAKOUT_THRESHOLD_PERCENT:-0.1}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  logs:
+    driver: local
