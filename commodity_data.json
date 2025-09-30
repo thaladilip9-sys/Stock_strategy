@@ -1,0 +1,31 @@
+{
+  "last_updated": "2025-09-30T08:15:10.012850",
+  "data": [
+    {
+      "symbol": "GOLDM",
+      "three_day_high": 115948.0,
+      "three_day_low": 112769.0,
+      "buy_entry": 113086.9,
+      "buy_target": 113563.75,
+      "buy_sl": 112927.95,
+      "sell_entry": 115630.1,
+      "sell_target": 115153.25,
+      "sell_sl": 115789.05,
+      "message": "\ud83d\udcca GOLDM05NOV25FUT - Historical Analysis\n\n\ud83d\udcc8 2025-09-25 High: \u20b9113,900.00\n\ud83d\udcc9 2025-09-25 Low: \u20b9112,769.00\n\n\ud83d\udcc8 2025-09-26 High: \u20b9114,477.00\n\ud83d\udcc9 2025-09-26 Low: \u20b9113,276.00\n\n\ud83d\udcc8 2025-09-29 High: \u20b9115,948.00\n\ud83d\udcc9 2025-09-29 Low: \u20b9114,499.00\n\n\ud83c\udfaf GOLDM05NOV25FUT - TRADING LEVELS\n========================================\n\ud83d\udcc8 3-Day High: \u20b9115,948.00\n\ud83d\udcc9 3-Day Low: \u20b9112,769.00\n\ud83d\udcca Price Range: \u20b93,179.00\n\n\ud83d\udfe2 BUY STRATEGY\nEntry: \u20b9113,086.90\nTarget: \u20b9113,563.75 (+0.4%)\nSL: \u20b9112,927.95 (-0.1%)\n\n\ud83d\udd34 SELL STRATEGY\nEntry: \u20b9115,630.10\nTarget: \u20b9115,153.25 (-0.4%)\nSL: \u20b9115,789.05 (0.1%)\n",
+      "token": "466161"
+    },
+    {
+      "symbol": "SILVERM",
+      "three_day_high": 144313.0,
+      "three_day_low": 133958.0,
+      "buy_entry": 134993.5,
+      "buy_target": 136546.75,
+      "buy_sl": 134475.75,
+      "sell_entry": 143277.5,
+      "sell_target": 141724.25,
+      "sell_sl": 143795.25,
+      "message": "\ud83d\udcca SILVERM28NOV25FUT - Historical Analysis\n\n\ud83d\udcc8 2025-09-25 High: \u20b9137,451.00\n\ud83d\udcc9 2025-09-25 Low: \u20b9133,958.00\n\n\ud83d\udcc8 2025-09-26 High: \u20b9142,129.00\n\ud83d\udcc9 2025-09-26 Low: \u20b9136,628.00\n\n\ud83d\udcc8 2025-09-29 High: \u20b9144,313.00\n\ud83d\udcc9 2025-09-29 Low: \u20b9141,611.00\n\n\ud83c\udfaf SILVERM28NOV25FUT - TRADING LEVELS\n========================================\n\ud83d\udcc8 3-Day High: \u20b9144,313.00\n\ud83d\udcc9 3-Day Low: \u20b9133,958.00\n\ud83d\udcca Price Range: \u20b910,355.00\n\n\ud83d\udfe2 BUY STRATEGY\nEntry: \u20b9134,993.50\nTarget: \u20b9136,546.75 (+1.2%)\nSL: \u20b9134,475.75 (-0.4%)\n\n\ud83d\udd34 SELL STRATEGY\nEntry: \u20b9143,277.50\nTarget: \u20b9141,724.25 (-1.1%)\nSL: \u20b9143,795.25 (0.4%)\n",
+      "token": "440938"
+    }
+  ]
+}
