@@ -1,38 +1,89 @@
-# Use Python 3.9 slim image
-FROM python:3.9-slim
+# syntax=docker/dockerfile:1.4
+# Build stage
+FROM python:3.11-slim-bullseye AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+# Set build environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-
 # Install Python dependencies
+COPY requirements.txt .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Final stage
+FROM python:3.11-slim-bullseye
 
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash app
+LABEL maintainer="Trading System" \
+      version="1.0" \
+      description="FastAPI Trading Hours Monitor Controller"
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Set working directory
+WORKDIR /app
+
+# Set runtime environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    TZ=Asia/Kolkata \
+    PORT=10000 \
+    MAX_WORKERS=4 \
+    LOG_LEVEL=info \
+    ENVIRONMENT=production
+
+# Create non-root user and necessary directories
+RUN useradd --create-home --shell /bin/bash app && \
+    mkdir -p /app/logs /app/stock_interaday_json /app/env && \
+    chown -R app:app /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/* && \
+    cp /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
+# Copy application code
+COPY --chown=app:app . .
+
+# Switch to non-root user
 USER app
 
-# Expose port for health checks
-EXPOSE 10000
+# Create volume mount points for persistent data
+VOLUME ["/app/logs", "/app/stock_interaday_json", "/app/env"]
 
-# Health check
-HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:10000/health || exit 1
+# Expose FastAPI port
+EXPOSE ${PORT}
 
-# Start the bot
-CMD ["python", "bot.py"]
+# Health check for FastAPI endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health || exit 1
+
+# Command to run the FastAPI application with proper configuration
+CMD ["uvicorn", "src.stock_opt_api:app", \
+     "--host", "0.0.0.0", \
+     "--port", "${PORT}", \
+     "--workers", "${MAX_WORKERS}", \
+     "--log-level", "${LOG_LEVEL}", \
+     "--proxy-headers", \
+     "--forwarded-allow-ips", "*"]

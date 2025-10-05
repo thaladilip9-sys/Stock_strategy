@@ -29,9 +29,9 @@ def send_whatsapp_message(message):
 
     
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")     
-url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")  
 
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 def send_telegram_message(message: str):
     """Send message via Telegram Bot API"""
@@ -51,5 +51,26 @@ def send_telegram_message(message: str):
             return False
     except Exception as e:
         print(f"❌ Exception while sending Telegram message: {e}")
+        return False
+    
+CHAT_ID_ADMIN = os.getenv("TELEGRAM_CHAT_ID_ADMIN")
+def send_telegram_message_admin(message: str):
+    """Send message via Telegram Bot API to Admin"""
+    
+    payload = {
+        "chat_id": CHAT_ID_ADMIN,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print("✅ Telegram Admin message sent!")
+            return True
+        else:
+            print(f"❌ Failed to send Telegram Admin message: {response.text}")
+            return False
+    except Exception as e:
+        print(f"❌ Exception while sending Telegram Admin message: {e}")
         return False
     

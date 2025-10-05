@@ -547,7 +547,6 @@ class UpdateStockOptData:
 
         send_telegram_message(message)
         
-
-if __name__ == "__main__":
-    analyzer = UpdateStockOptData()
-    analyzer.run()
+# from src.main.interaday_stock_options.angel_one.stock_options_analysis import UpdateStockOptData
+# analyzer = UpdateStockOptData()
+# analyzer.run()

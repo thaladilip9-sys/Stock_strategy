@@ -1,0 +1,619 @@
+{
+    "analysis_time": "2025-10-02T21:21:37.038973",
+    "min_price_filter": 1000,
+    "stocks_analyzed": 9,
+    "results": [
+        {
+            "stock": {
+                "token": "21690",
+                "symbol": "DIXON-EQ",
+                "name": "DIXON",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "100.000000"
+            },
+            "historical": {
+                "open": 16404.0,
+                "high": 16700.0,
+                "low": 16335.0,
+                "close": 16453.0,
+                "volume": 260204.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "DIXON28OCT2516500CE",
+                    "token": "81981",
+                    "strike": 16500.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "50",
+                    "ltp": 638.05,
+                    "option_ohlc": {
+                        "day_high": 772.7,
+                        "day_low": 589.05,
+                        "day_open": 648.0,
+                        "day_close": 638.05
+                    },
+                    "trading_levels": {
+                        "buy_entry": 772.71,
+                        "target": 811.34,
+                        "stoploss": 734.07,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 27.16,
+                        "downside_risk": -15.05
+                    }
+                },
+                "pe": {
+                    "symbol": "DIXON28OCT2516750PE",
+                    "token": "79174",
+                    "strike": 16750.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "50",
+                    "ltp": 696.35,
+                    "option_ohlc": {
+                        "day_high": 779.9,
+                        "day_low": 588.9,
+                        "day_open": 650.05,
+                        "day_close": 696.35
+                    },
+                    "trading_levels": {
+                        "buy_entry": 779.91,
+                        "target": 818.89,
+                        "stoploss": 740.9,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 17.6,
+                        "downside_risk": -6.4
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "4244",
+                "symbol": "HDFCAMC-EQ",
+                "name": "HDFCAMC",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "50.000000"
+            },
+            "historical": {
+                "open": 5524.0,
+                "high": 5590.0,
+                "low": 5524.0,
+                "close": 5555.5,
+                "volume": 243162.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "HDFCAMC28OCT255550CE",
+                    "token": "106277",
+                    "strike": 5550.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "150",
+                    "ltp": 163.95,
+                    "option_ohlc": {
+                        "day_high": 170.25,
+                        "day_low": 141.7,
+                        "day_open": 153.35,
+                        "day_close": 163.95
+                    },
+                    "trading_levels": {
+                        "buy_entry": 170.26,
+                        "target": 178.76,
+                        "stoploss": 161.74,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 9.03,
+                        "downside_risk": 1.35
+                    }
+                },
+                "pe": {
+                    "symbol": "HDFCAMC28OCT255600PE",
+                    "token": "89125",
+                    "strike": 5600.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "150",
+                    "ltp": 144.05,
+                    "option_ohlc": {
+                        "day_high": 164.0,
+                        "day_low": 134.3,
+                        "day_open": 153.6,
+                        "day_close": 144.05
+                    },
+                    "trading_levels": {
+                        "buy_entry": 164.01,
+                        "target": 172.2,
+                        "stoploss": 155.8,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 19.54,
+                        "downside_risk": -8.16
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "19585",
+                "symbol": "BSE-EQ",
+                "name": "BSE",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 2048.0,
+                "high": 2085.0,
+                "low": 2038.0,
+                "close": 2081.4,
+                "volume": 3715436.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "BSE28OCT252050CE",
+                    "token": "70542",
+                    "strike": 2050.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 124.15,
+                    "option_ohlc": {
+                        "day_high": 127.1,
+                        "day_low": 105.15,
+                        "day_open": 113.7,
+                        "day_close": 124.15
+                    },
+                    "trading_levels": {
+                        "buy_entry": 127.11,
+                        "target": 133.46,
+                        "stoploss": 120.74,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 7.49,
+                        "downside_risk": 2.74
+                    }
+                },
+                "pe": {
+                    "symbol": "BSE28OCT252100PE",
+                    "token": "73648",
+                    "strike": 2100.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 105.0,
+                    "option_ohlc": {
+                        "day_high": 131.95,
+                        "day_low": 102.5,
+                        "day_open": 130.85,
+                        "day_close": 105.0
+                    },
+                    "trading_levels": {
+                        "buy_entry": 131.96,
+                        "target": 138.55,
+                        "stoploss": 125.35,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 31.95,
+                        "downside_risk": -19.38
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "7406",
+                "symbol": "GLENMARK-EQ",
+                "name": "GLENMARK",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1952.7,
+                "high": 1973.4,
+                "low": 1940.0,
+                "close": 1959.2,
+                "volume": 524801.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "GLENMARK28OCT251960CE",
+                    "token": "85855",
+                    "strike": 1960.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 58.95,
+                    "option_ohlc": {
+                        "day_high": 69.0,
+                        "day_low": 51.0,
+                        "day_open": 60.3,
+                        "day_close": 58.95
+                    },
+                    "trading_levels": {
+                        "buy_entry": 69.01,
+                        "target": 72.45,
+                        "stoploss": 65.55,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 22.9,
+                        "downside_risk": -11.2
+                    }
+                },
+                "pe": {
+                    "symbol": "GLENMARK28OCT251980PE",
+                    "token": "82885",
+                    "strike": 1980.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 60.15,
+                    "option_ohlc": {
+                        "day_high": 69.3,
+                        "day_low": 54.25,
+                        "day_open": 59.95,
+                        "day_close": 60.15
+                    },
+                    "trading_levels": {
+                        "buy_entry": 69.31,
+                        "target": 72.77,
+                        "stoploss": 65.83,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 20.97,
+                        "downside_risk": -9.45
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "13538",
+                "symbol": "TECHM-EQ",
+                "name": "TECHM",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1401.0,
+                "high": 1423.6,
+                "low": 1393.4,
+                "close": 1416.0,
+                "volume": 1683484.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "TECHM28OCT251420CE",
+                    "token": "123987",
+                    "strike": 1420.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "600",
+                    "ltp": 38.8,
+                    "option_ohlc": {
+                        "day_high": 41.6,
+                        "day_low": 30.75,
+                        "day_open": 32.0,
+                        "day_close": 38.8
+                    },
+                    "trading_levels": {
+                        "buy_entry": 41.61,
+                        "target": 43.68,
+                        "stoploss": 39.52,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 12.58,
+                        "downside_risk": -1.86
+                    }
+                },
+                "pe": {
+                    "symbol": "TECHM28OCT251440PE",
+                    "token": "130015",
+                    "strike": 1440.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "600",
+                    "ltp": 55.45,
+                    "option_ohlc": {
+                        "day_high": 61.6,
+                        "day_low": 51.35,
+                        "day_open": 61.55,
+                        "day_close": 55.45
+                    },
+                    "trading_levels": {
+                        "buy_entry": 61.61,
+                        "target": 64.68,
+                        "stoploss": 58.52,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 16.65,
+                        "downside_risk": -5.54
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "7229",
+                "symbol": "HCLTECH-EQ",
+                "name": "HCLTECH",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1386.1,
+                "high": 1396.8,
+                "low": 1382.0,
+                "close": 1389.5,
+                "volume": 2253527.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "HCLTECH28OCT251380CE",
+                    "token": "85174",
+                    "strike": 1380.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "350",
+                    "ltp": 40.55,
+                    "option_ohlc": {
+                        "day_high": 44.5,
+                        "day_low": 36.8,
+                        "day_open": 39.85,
+                        "day_close": 40.55
+                    },
+                    "trading_levels": {
+                        "buy_entry": 44.51,
+                        "target": 46.73,
+                        "stoploss": 42.27,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 15.23,
+                        "downside_risk": -4.25
+                    }
+                },
+                "pe": {
+                    "symbol": "HCLTECH28OCT251400PE",
+                    "token": "88978",
+                    "strike": 1400.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "350",
+                    "ltp": 43.1,
+                    "option_ohlc": {
+                        "day_high": 49.55,
+                        "day_low": 39.95,
+                        "day_open": 47.95,
+                        "day_close": 43.1
+                    },
+                    "trading_levels": {
+                        "buy_entry": 49.56,
+                        "target": 52.03,
+                        "stoploss": 47.07,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 20.71,
+                        "downside_risk": -9.22
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "3718",
+                "symbol": "VOLTAS-EQ",
+                "name": "VOLTAS",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1349.1,
+                "high": 1364.3,
+                "low": 1342.4,
+                "close": 1353.5,
+                "volume": 1189113.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "VOLTAS28OCT251360CE",
+                    "token": "134257",
+                    "strike": 1360.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 32.25,
+                    "option_ohlc": {
+                        "day_high": 36.85,
+                        "day_low": 27.55,
+                        "day_open": 31.15,
+                        "day_close": 32.25
+                    },
+                    "trading_levels": {
+                        "buy_entry": 36.86,
+                        "target": 38.69,
+                        "stoploss": 35.01,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 19.98,
+                        "downside_risk": -8.55
+                    }
+                },
+                "pe": {
+                    "symbol": "VOLTAS28OCT251380PE",
+                    "token": "128080",
+                    "strike": 1380.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 58.85,
+                    "option_ohlc": {
+                        "day_high": 71.6,
+                        "day_low": 58.1,
+                        "day_open": 66.95,
+                        "day_close": 58.85
+                    },
+                    "trading_levels": {
+                        "buy_entry": 71.61,
+                        "target": 75.18,
+                        "stoploss": 68.02,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 27.75,
+                        "downside_risk": -15.58
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "9683",
+                "symbol": "KPITTECH-EQ",
+                "name": "KPITTECH",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1110.0,
+                "high": 1163.3,
+                "low": 1105.6,
+                "close": 1153.2,
+                "volume": 3024116.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "KPITTECH28OCT251160CE",
+                    "token": "103415",
+                    "strike": 1160.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "400",
+                    "ltp": 29.85,
+                    "option_ohlc": {
+                        "day_high": 31.25,
+                        "day_low": 18.3,
+                        "day_open": 23.9,
+                        "day_close": 29.85
+                    },
+                    "trading_levels": {
+                        "buy_entry": 31.26,
+                        "target": 32.81,
+                        "stoploss": 29.69,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 9.92,
+                        "downside_risk": 0.54
+                    }
+                },
+                "pe": {
+                    "symbol": "KPITTECH28OCT251180PE",
+                    "token": "98051",
+                    "strike": 1180.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "400",
+                    "ltp": 62.45,
+                    "option_ohlc": {
+                        "day_high": 93.9,
+                        "day_low": 61.2,
+                        "day_open": 79.05,
+                        "day_close": 62.45
+                    },
+                    "trading_levels": {
+                        "buy_entry": 93.91,
+                        "target": 98.6,
+                        "stoploss": 89.2,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 57.88,
+                        "downside_risk": -42.84
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "5748",
+                "symbol": "CYIENT-EQ",
+                "name": "CYIENT",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1146.4,
+                "high": 1160.0,
+                "low": 1145.3,
+                "close": 1149.4,
+                "volume": 303718.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "CYIENT28OCT251140CE",
+                    "token": "77227",
+                    "strike": 1140.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "425",
+                    "ltp": 50.0,
+                    "option_ohlc": {
+                        "day_high": 50.0,
+                        "day_low": 47.05,
+                        "day_open": 48.75,
+                        "day_close": 50.0
+                    },
+                    "trading_levels": {
+                        "buy_entry": 50.01,
+                        "target": 52.5,
+                        "stoploss": 47.5,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 5.0,
+                        "downside_risk": 5.0
+                    }
+                },
+                "pe": {
+                    "symbol": "CYIENT28OCT251180PE",
+                    "token": "77253",
+                    "strike": 1180.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "425",
+                    "ltp": 52.8,
+                    "option_ohlc": {
+                        "day_high": 52.8,
+                        "day_low": 51.35,
+                        "day_open": 51.5,
+                        "day_close": 52.8
+                    },
+                    "trading_levels": {
+                        "buy_entry": 52.81,
+                        "target": 55.44,
+                        "stoploss": 50.16,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 5.0,
+                        "downside_risk": 5.0
+                    }
+                }
+            }
+        }
+    ]
+}
