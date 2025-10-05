@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: fastapi-trading-monitor
+    env: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn fastapi_trading_monitor:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 30
+    envVars:
+      - key: RENDER
+        value: true
+      - key: RENDER_INSTANCE_TYPE
+        value: free
+    healthCheckPath: /health
+    healthCheckTimeout: 10

@@ -491,6 +491,13 @@ async def health_check():
         "memory_percent": round(memory_stats['percent'], 2)
     }
 
+
+@app.get("/health-render", include_in_schema=False)
+async def health_check():
+    """Simple health check for Render"""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+
 @app.get("/next-trading-day")
 async def get_next_trading_day():
     """Get information about the next trading day"""
