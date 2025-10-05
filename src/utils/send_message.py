@@ -1,6 +1,6 @@
 from twilio.rest import Client
 from dotenv import load_dotenv
-import os,requests
+import os,requests,logging
 load_dotenv('./env/.env.prod')
 
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -54,6 +54,9 @@ def send_telegram_message(message: str):
         return False
     
 CHAT_ID_ADMIN = os.getenv("TELEGRAM_CHAT_ID_ADMIN")
+
+logging.info("Admin Chat ID:", CHAT_ID_ADMIN[:5])  # Print first 5 characters for verification
+
 def send_telegram_message_admin(message: str):
     """Send message via Telegram Bot API to Admin"""
     
