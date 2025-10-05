@@ -184,11 +184,10 @@ async def trading_hours_scheduler():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Lifespan context manager to replace on_event"""
+    """Lifespan context manager with task supervision"""
     # Startup code
     logging.info("🚀 Starting FastAPI Trading Hours Monitor Controller")
     send_telegram_message_admin(f"🚀 *Starting FastAPI Trading Hours Monitor Controller*")
-    
     
     # Initial memory cleanup
     initial_memory = force_garbage_collection()
@@ -218,9 +217,47 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logging.info("🔰 Initial sync: Monitor already in correct state")
         send_telegram_message_admin("🔰 *Initial sync:* Monitor already in correct state")
     
-    # Start background schedulers
-    trading_scheduler_task = asyncio.create_task(trading_hours_scheduler())
-    scheduled_tasks_task = asyncio.create_task(scheduled_tasks_manager())
+    # Start background schedulers with supervision
+    app.state.trading_scheduler_task = asyncio.create_task(trading_hours_scheduler())
+    app.state.scheduled_tasks_task = asyncio.create_task(scheduled_tasks_manager())
+    
+    # Add task monitoring
+    async def monitor_tasks():
+        """Monitor background tasks and restart them if they crash"""
+        while True:
+            try:
+                # Check if trading scheduler task is done (crashed)
+                if app.state.trading_scheduler_task.done():
+                    try:
+                        result = app.state.trading_scheduler_task.result()
+                        logging.info("🔄 Trading scheduler task completed normally")
+                    except Exception as e:
+                        logging.error(f"🔄 Trading scheduler task crashed: {e}")
+                    
+                    # Restart the task
+                    app.state.trading_scheduler_task = asyncio.create_task(trading_hours_scheduler())
+                    logging.info("🔄 Restarted trading scheduler task")
+                
+                # Check if scheduled tasks task is done (crashed)
+                if app.state.scheduled_tasks_task.done():
+                    try:
+                        result = app.state.scheduled_tasks_task.result()
+                        logging.info("🔄 Scheduled tasks task completed normally")
+                    except Exception as e:
+                        logging.error(f"🔄 Scheduled tasks task crashed: {e}")
+                    
+                    # Restart the task
+                    app.state.scheduled_tasks_task = asyncio.create_task(scheduled_tasks_manager())
+                    logging.info("🔄 Restarted scheduled tasks task")
+                
+                await asyncio.sleep(10)  # Check every 10 seconds
+                
+            except Exception as e:
+                logging.error(f"❌ Task monitor error: {e}")
+                await asyncio.sleep(30)
+    
+    # Start task monitor
+    app.state.task_monitor = asyncio.create_task(monitor_tasks())
     
     yield  # App runs here
     
@@ -229,11 +266,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     send_telegram_message_admin("🛑 *Shutting down FastAPI Trading Hours Monitor Controller*")
     
     # Cancel all background tasks
-    trading_scheduler_task.cancel()
-    scheduled_tasks_task.cancel()
+    app.state.task_monitor.cancel()
+    app.state.trading_scheduler_task.cancel()
+    app.state.scheduled_tasks_task.cancel()
     
     try:
-        await asyncio.gather(trading_scheduler_task, scheduled_tasks_task, return_exceptions=True)
+        await asyncio.gather(
+            app.state.task_monitor,
+            app.state.trading_scheduler_task, 
+            app.state.scheduled_tasks_task, 
+            return_exceptions=True
+        )
     except Exception as e:
         logging.error(f"Error during shutdown: {e}")
         send_telegram_message_admin(f"❌ Error during shutdown: {e}")
