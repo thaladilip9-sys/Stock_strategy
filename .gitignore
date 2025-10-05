@@ -73,7 +73,9 @@ target/
 test.ipynb
 test_1.ipynb
 
-test.py
+# Python test files
+/test.py
+/test_*.py
 
 # pyenv
 .python-version
