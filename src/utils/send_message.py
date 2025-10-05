@@ -54,9 +54,6 @@ def send_telegram_message(message: str):
         return False
     
 CHAT_ID_ADMIN = os.getenv("TELEGRAM_CHAT_ID_ADMIN")
-
-logging.info("Admin Chat ID:", CHAT_ID_ADMIN)  # Print first 5 characters for verification
-
 def send_telegram_message_admin(message: str):
     """Send message via Telegram Bot API to Admin"""
     
