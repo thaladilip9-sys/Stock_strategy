@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 # Build stage
 FROM python:3.11-slim-bullseye AS builder
-
+ENV TZ=Asia/Kolkata
 # Set working directory
 WORKDIR /app
 

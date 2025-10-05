@@ -3,6 +3,8 @@ import requests
 from datetime import datetime, time as dt_time, date, timedelta
 from typing import Set, Optional
 import logging
+import pytz
+from .timezone_utils import get_ist_now, convert_to_ist, IST
 
 
 # Set up logging
@@ -89,7 +91,8 @@ class MarketHolidayManager:
     def is_trading_day(self, check_date: date = None) -> bool:
         """Check if a given date is a trading day"""
         if check_date is None:
-            check_date = date.today()
+            # Use IST date
+            check_date = get_ist_now().date()
         
         # Check if weekend (Saturday=5, Sunday=6)
         if check_date.weekday() >= 5:
@@ -125,8 +128,9 @@ class TradingHoursManager:
     
     def is_trading_hours(self) -> bool:
         """Check if current time is within trading hours on a trading day"""
-        current_time = datetime.now().time()
-        current_date = date.today()
+        ist_now = get_ist_now()
+        current_time = ist_now.time()
+        current_date = ist_now.date()
         
         # Check if it's a trading day
         if not self.holiday_manager.is_trading_day(current_date):

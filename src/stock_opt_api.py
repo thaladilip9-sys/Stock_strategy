@@ -25,6 +25,7 @@ from src.utils.get_active_market_days import MarketHolidayManager,TradingHoursMa
 from src.main.interaday_stock_options.services.manage_monitor import MonitorManager
 
 from src.utils.send_message import send_telegram_message_admin
+from src.utils.timezone_utils import get_ist_now, convert_to_ist, IST
 
 # Set up logging
 logging.basicConfig(
@@ -72,9 +73,10 @@ def force_garbage_collection():
     return memory_after
 
 async def run_stock_analysis():
-    """Run stock options analysis at 8:00 PM"""
+    """Run stock options analysis at 8:00 PM IST"""
     try:
-        logging.info("🔄 Starting scheduled stock options analysis...")
+        ist_now = get_ist_now()
+        logging.info(f"🔄 Starting scheduled stock options analysis at {ist_now.strftime('%Y-%m-%d %H:%M:%S')} IST...")
         
         from src.main.interaday_stock_options.angel_one.stock_options_analysis import UpdateStockOptData
         
@@ -87,7 +89,8 @@ async def run_stock_analysis():
         # Force garbage collection after completion
         force_garbage_collection()
         
-        logging.info(f"✅ Stock options analysis completed: {result}")
+        ist_completed = get_ist_now()
+        logging.info(f"✅ Stock options analysis completed at {ist_completed.strftime('%Y-%m-%d %H:%M:%S')} IST: {result}")
         return result
         
     except Exception as e:
@@ -100,12 +103,12 @@ async def scheduled_tasks_manager():
     """Manage all scheduled tasks"""
     while True:
         try:
-            now = datetime.now()
-            current_time = now.time()
+            ist_now = get_ist_now()
+            current_time = ist_now.time()
             
-            # Schedule stock analysis at 8:00 PM (20:00)
+            # Schedule stock analysis at 8:00 PM IST (20:00)
             if current_time.hour == 20 and current_time.minute == 0 and current_time.second == 0:
-                logging.info("⏰ 8:00 PM - Triggering stock options analysis")
+                logging.info(f"⏰ 8:00 PM IST ({ist_now.strftime('%Y-%m-%d %H:%M:%S')}) - Triggering stock options analysis")
                 asyncio.create_task(run_stock_analysis())
                 
                 # Sleep for 61 seconds to avoid multiple triggers in the same minute

@@ -83,7 +83,8 @@ PySocks==1.7.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 pytweening==1.2.0
-pytz==2025.2
+pytz==2025.2  # Required for timezone handling (specifically IST)
+tzlocal==5.3.1  # For local timezone operations
 pywhatkit==5.4
 pywin32==311
 pyzmq==27.1.0
