@@ -20,7 +20,6 @@ from collections import defaultdict
 from src.utils.angel_one_connect import AngelOneConnect
 from src.utils.send_message import send_telegram_message, send_telegram_message_admin
 
-
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
@@ -42,6 +41,7 @@ class ParallelOptionMonitor:
         self.alerted_targets = set()
         self.alerted_stoploss = set()
         self.alerted_entries = set()
+        self.entered_positions = set()  # NEW: Track positions that have been entered
         self.last_ltp = {}  # Store last LTP for change detection
         self.is_ws_connected = False
         self.ws_thread = None
@@ -64,14 +64,12 @@ class ParallelOptionMonitor:
 
         self.connect_object = AngelOneConnect()
         self.smart_api = self.connect_object.connect()
-        
 
     def load_analysis_data(self, json_file_path: str):
         """Load analysis data from JSON file"""
         try:
             with open(json_file_path, 'r') as f:
                 data = json.load(f)
-            
             
             logging.info(f"Loaded analysis data from: {json_file_path}")
             logging.info(f"Analysis Time: {data.get('analysis_time', 'N/A')}")
@@ -81,6 +79,7 @@ class ParallelOptionMonitor:
             self.monitored_options = []
             self.token_map = {}
             valid_tokens = 0
+            skipped_gap_up = 0
             
             for result in data.get('results', []):
                 stock = result.get('stock', {})
@@ -92,6 +91,15 @@ class ParallelOptionMonitor:
                     token = ce_option.get('token')
                     
                     if token and str(token).strip():
+                        # NEW: Check for gap up condition
+                        day_open = ce_option.get('option_ohlc', {}).get('day_open', 0)
+                        buy_entry = ce_option.get('trading_levels', {}).get('buy_entry', 0)
+                        
+                        if day_open > buy_entry:
+                            logging.info(f"⏩ Skipping {ce_option.get('symbol')} - Gap up detected (Open: {day_open} > Entry: {buy_entry})")
+                            skipped_gap_up += 1
+                            continue
+                        
                         ce_option['stock_name'] = stock.get('name')
                         ce_option['stock_symbol'] = stock.get('symbol')
                         ce_option['stock_day_high'] = result.get('historical', {}).get('high', 0)
@@ -110,6 +118,17 @@ class ParallelOptionMonitor:
                     token = pe_option.get('token')
                     
                     if token and str(token).strip():
+                        # NEW: Check for gap up condition
+                        day_open = pe_option.get('option_ohlc', {}).get('day_open', 0)
+                        buy_entry = pe_option.get('trading_levels', {}).get('buy_entry', 0)
+                        
+                        if day_open > buy_entry:
+                            logging.info(f"⏩ Skipping {pe_option.get('symbol')} - Gap up detected (Open: {day_open} > Entry: {buy_entry})")
+                            send_telegram_message(f"""⏩ *Skipping* {pe_option.get('symbol')} - 
+                                                  *Gap up detected* (Open: {day_open} > Entry: {buy_entry})""")
+                            skipped_gap_up += 1
+                            continue
+                        
                         pe_option['stock_name'] = stock.get('name')
                         pe_option['stock_symbol'] = stock.get('symbol')
                         pe_option['stock_day_high'] = result.get('historical', {}).get('high', 0)
@@ -123,6 +142,7 @@ class ParallelOptionMonitor:
                         valid_tokens += 1
             
             logging.info(f"Monitoring {len(self.monitored_options)} options")
+            logging.info(f"Skipped {skipped_gap_up} options due to gap up")
             logging.info(f"Valid tokens: {valid_tokens}")
             
             # Initialize last LTP storage
@@ -188,27 +208,28 @@ class ParallelOptionMonitor:
         stoploss = trading_levels.get('stoploss', 0)
         
         message = f"""
-<b>BUY ENTRY TRIGGERED</b>
+*BUY ENTRY TRIGGERED*
 
-<b>Stock:</b> {stock_name}
-<b>Option:</b> {option_symbol}
-<b>Type:</b> {option_type}
-<b>Current LTP:</b> ₹{current_ltp:,.2f}
-<b>Entry Level:</b> ₹{buy_entry:,.2f}
+*Stock:* {stock_name}
+*Option:* {option_symbol}
+*Type:* {option_type}
+*Current LTP:* ₹{current_ltp:,.2f}
+*Entry Level:* ₹{buy_entry:,.2f}
 
-<b>Action:</b> BUY
-<b>Target:</b> ₹{target:,.2f}
-<b>Stop Loss:</b> ₹{stoploss:,.2f}
+*Action:* BUY
+*Target:* ₹{target:,.2f}
+*Stop Loss:* ₹{stoploss:,.2f}
 
-<b>Upside:</b> +{trading_levels.get('upside_potential', 0)}%
-<b>Downside:</b> -{trading_levels.get('downside_risk', 0)}%
-<b>Risk-Reward:</b> {trading_levels.get('risk_reward_ratio', 0)}:1
+*Upside:* +{trading_levels.get('upside_potential', 0)}%
+*Downside:* -{trading_levels.get('downside_risk', 0)}%
+*Risk-Reward:* {trading_levels.get('risk_reward_ratio', 0)}:1
 
-<i>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>
+*{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
         """
         
         if send_telegram_message(message):
             self.alerted_entries.add(unique_id)
+            self.entered_positions.add(unique_id)  # NEW: Mark as entered position
             logging.info(f"PARALLEL Entry alert sent for {option_symbol}")
 
     def send_target_alert(self, option_data: Dict, current_ltp: float):
@@ -224,20 +245,20 @@ class ParallelOptionMonitor:
         profit_percentage = ((current_ltp - buy_entry) / buy_entry) * 100 if buy_entry > 0 else 0
         
         message = f"""
-<b>TARGET ACHIEVED</b>
+*TARGET ACHIEVED*
 
-<b>Stock:</b> {stock_name}
-<b>Option:</b> {option_symbol}
-<b>Type:</b> {option_type}
-<b>Current LTP:</b> ₹{current_ltp:,.2f}
-<b>Target:</b> ₹{target:,.2f}
+*Stock:* {stock_name}
+*Option:* {option_symbol}
+*Type:* {option_type}
+*Current LTP:* ₹{current_ltp:,.2f}
+*Target:* ₹{target:,.2f}
 
-<b>Profit:</b> +{profit_percentage:.2f}%
-<b>Entry was:</b> ₹{buy_entry:,.2f}
+*Profit:* +{profit_percentage:.2f}%
+*Entry was:* ₹{buy_entry:,.2f}
 
-<b>Action:</b> BOOK PROFITS
+*Action:* BOOK PROFITS
 
-<i>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>
+*{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
         """
         
         if send_telegram_message(message):
@@ -257,20 +278,20 @@ class ParallelOptionMonitor:
         loss_percentage = ((buy_entry - current_ltp) / buy_entry) * 100 if buy_entry > 0 else 0
         
         message = f"""
-<b>STOPLOSS HIT</b>
+*STOPLOSS HIT*
 
-<b>Stock:</b> {stock_name}
-<b>Option:</b> {option_symbol}
-<b>Type:</b> {option_type}
-<b>Current LTP:</b> ₹{current_ltp:,.2f}
-<b>Stop Loss:</b> ₹{stoploss:,.2f}
+*Stock:* {stock_name}
+*Option:* {option_symbol}
+*Type:* {option_type}
+*Current LTP:* ₹{current_ltp:,.2f}
+*Stop Loss:* ₹{stoploss:,.2f}
 
-<b>Loss:</b> -{loss_percentage:.2f}%
-<b>Entry was:</b> ₹{buy_entry:,.2f}
+*Loss:* -{loss_percentage:.2f}%
+*Entry was:* ₹{buy_entry:,.2f}
 
-<b>Action:</b> EXIT TRADE
+*Action:* EXIT TRADE
 
-<i>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>
+*{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
         """
         
         if send_telegram_message(message):
@@ -285,13 +306,9 @@ class ParallelOptionMonitor:
                 full_token = message['token']
                 token_parts = full_token.split('|')
                 token = token_parts[1] if len(token_parts) > 1 else full_token
-
-                print("-" * 40)
-                print(f"Received data for token: {token}")
-                print(f"Full message: {message}")
-                print("-" * 40)
                 
-                ltp = float(message.get('ltp', 0))
+                raw_ltp = float(message['last_traded_price'])
+                actual_ltp = raw_ltp / 100.0
                 
                 # Find the option using token map
                 option_data = self.token_map.get(token)
@@ -300,14 +317,14 @@ class ParallelOptionMonitor:
                     previous_ltp = self.last_ltp.get(unique_id, 0)
                     
                     # Update last LTP
-                    self.last_ltp[unique_id] = ltp
+                    self.last_ltp[unique_id] = actual_ltp
                     
                     # Check trading levels in parallel
-                    self.check_trading_levels_parallel(option_data, ltp)
+                    self.check_trading_levels_parallel(option_data, actual_ltp)
                     
                     # Log significant changes
-                    if abs(ltp - previous_ltp) > 0.1:
-                        logging.debug(f"{option_data['stock_name']} {option_data['option_type']} | LTP: ₹{ltp:,.2f}")
+                    if abs(actual_ltp - previous_ltp) > 0.1:
+                        logging.debug(f"{option_data['stock_name']} {option_data['option_type']} | LTP: ₹{actual_ltp:,.2f}")
                     
         except Exception as e:
             logging.error(f"Error processing WebSocket data: {e}")
@@ -343,31 +360,33 @@ class ParallelOptionMonitor:
             self.alert_queue.put(alert_data)
             self.last_alert_time[alert_key] = current_time
         
-        # Check for TARGET hit
-        elif (current_ltp >= target and 
-              unique_id not in self.alerted_targets):
+        # NEW LOGIC: Only check target and stoploss if position was entered
+        elif unique_id in self.entered_positions:
+            # Check for TARGET hit (only if position was entered)
+            if (current_ltp >= target and 
+                unique_id not in self.alerted_targets):
+                
+                alert_data = {
+                    'type': 'target',
+                    'option_data': option_data,
+                    'current_ltp': current_ltp,
+                    'timestamp': datetime.now().isoformat()
+                }
+                self.alert_queue.put(alert_data)
+                self.last_alert_time[alert_key] = current_time
             
-            alert_data = {
-                'type': 'target',
-                'option_data': option_data,
-                'current_ltp': current_ltp,
-                'timestamp': datetime.now().isoformat()
-            }
-            self.alert_queue.put(alert_data)
-            self.last_alert_time[alert_key] = current_time
-        
-        # Check for STOPLOSS hit
-        elif (current_ltp <= stoploss and 
-              unique_id not in self.alerted_stoploss):
-            
-            alert_data = {
-                'type': 'stoploss',
-                'option_data': option_data,
-                'current_ltp': current_ltp,
-                'timestamp': datetime.now().isoformat()
-            }
-            self.alert_queue.put(alert_data)
-            self.last_alert_time[alert_key] = current_time
+            # Check for STOPLOSS hit (only if position was entered)
+            elif (current_ltp <= stoploss and 
+                  unique_id not in self.alerted_stoploss):
+                
+                alert_data = {
+                    'type': 'stoploss',
+                    'option_data': option_data,
+                    'current_ltp': current_ltp,
+                    'timestamp': datetime.now().isoformat()
+                }
+                self.alert_queue.put(alert_data)
+                self.last_alert_time[alert_key] = current_time
 
     def on_open(self, wsapp):
         """Callback function for WebSocket open"""
@@ -378,7 +397,7 @@ class ParallelOptionMonitor:
         self.start_alert_workers()
         
         connection_msg = (
-            f"<b>PARALLEL MONITORING STARTED</b>\n"
+            f"*PARALLEL MONITORING STARTED*\n"
             f"Real-time monitoring for {len(self.monitored_options)} options!\n"
             f"Active subscriptions: {len(self.token_map)}\n"
             f"Alert workers: {self.max_alert_workers}\n"
@@ -405,7 +424,6 @@ class ParallelOptionMonitor:
             if not feed_token:
                 logging.error("Could not get feed token for WebSocket")
                 return False
-            
             
             client_code = os.getenv("ANGEL_CLIENT_ID")
             jwt_token = self.connect_object.session_data['data']['jwtToken']
@@ -484,6 +502,7 @@ class ParallelOptionMonitor:
             import traceback
             logging.error(traceback.format_exc())
             return False
+
     def start_health_monitor(self):
         """Start health monitoring in separate thread"""
         def health_monitor():
@@ -511,22 +530,24 @@ class ParallelOptionMonitor:
         queue_size = self.alert_queue.qsize()
         
         message = f"""
-<b>PARALLEL SYSTEM HEALTH REPORT</b>
+*PARALLEL SYSTEM HEALTH REPORT*
 
-<b>Monitoring Status:</b> ACTIVE
-<b>Options Tracked:</b> {active_options}/{len(self.monitored_options)}
-<b>Alert Workers:</b> {self.max_alert_workers}
-<b>Queue Size:</b> {queue_size}
-<b>Messages Sent:</b> {self.message_count}
+*Monitoring Status:* ACTIVE
+*Options Tracked:* {active_options}/{len(self.monitored_options)}
+*Alert Workers:* {self.max_alert_workers}
+*Queue Size:* {queue_size}
+*Messages Sent:* {self.message_count}
 
-<b>Alerts Triggered:</b>
+*Alerts Triggered:*
    • Entries: {len(self.alerted_entries)}
    • Targets: {len(self.alerted_targets)}
    • Stoploss: {len(self.alerted_stoploss)}
 
-<b>Report Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+*Active Positions:* {len(self.entered_positions)}
 
-<b>All systems running in parallel</b>
+*Report Time:* {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+*All systems running in parallel*
         """
         send_telegram_message_admin(message)
 
@@ -596,8 +617,8 @@ class ParallelOptionMonitor:
 
 def main():
     """Main function to start parallel option monitoring"""
-    print("PARALLEL LIVE OPTION MONITORING SYSTEM")
-    print("=" * 80)
+    logging.info("PARALLEL LIVE OPTION MONITORING SYSTEM")
+    logging.info("=" * 80)
     # Initialize monitor
     monitor = ParallelOptionMonitor()
     # Find latest analysis file
@@ -605,37 +626,35 @@ def main():
     if not latest_file:
         return
     
-    
-    
     # Load analysis data
     if not monitor.load_analysis_data(latest_file):
         logging.error("Failed to load analysis data")
         return
     
     # Show monitoring summary
-    print(f"\nPARALLEL MONITORING SUMMARY:")
-    print(f"   Total Options: {len(monitor.monitored_options)}")
-    print(f"   Alert Workers: {monitor.max_alert_workers}")
-    print(f"   Mode: True Parallel Processing")
-    print(f"   WebSocket: Real-time")
-    print(f"   Telegram Alerts: {'Enabled' if monitor.telegram_bot_token else 'Disabled'}")
+    logging.info(f"\nPARALLEL MONITORING SUMMARY:")
+    logging.info(f"   Total Options: {len(monitor.monitored_options)}")
+    logging.info(f"   Alert Workers: {monitor.max_alert_workers}")
+    logging.info(f"   Mode: True Parallel Processing")
+    logging.info(f"   WebSocket: Real-time")
+    logging.info(f"   Telegram Alerts: {'Enabled' if monitor.telegram_bot_token else 'Disabled'}")
     
     # Start parallel monitoring
     try:
-        print(f"\nStarting PARALLEL WebSocket monitoring...")
-        print("   All options monitored simultaneously")
-        print("   Instant alerts with parallel processing")
-        print("   Press Ctrl+C to stop monitoring")
-        print("=" * 80)
+        logging.info(f"\nStarting PARALLEL WebSocket monitoring...")
+        logging.info("   All options monitored simultaneously")
+        logging.info("   Instant alerts with parallel processing")
+        logging.info("   Press Ctrl+C to stop monitoring")
+        logging.info("=" * 80)
         
         monitor.start_live_monitoring()
         
-        print(f"Monitoring error: {e}")
+        logging.info(f"Monitoring error: {e}")
     except KeyboardInterrupt:
-        print("\nMonitoring stopped by user")
+        logging.info("\nMonitoring stopped by user")
         monitor.stop_monitoring()
     except Exception as e:
-        print(f"Monitoring error: {e}")
+        logging.info(f"Monitoring error: {e}")
         monitor.stop_monitoring()
 
 # if __name__ == "__main__":

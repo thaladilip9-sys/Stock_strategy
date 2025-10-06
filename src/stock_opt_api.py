@@ -263,7 +263,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     
     # Shutdown code
     logging.info("🛑 Shutting down FastAPI Trading Hours Monitor Controller")
-    send_telegram_message_admin("🛑 *Shutting down FastAPI Trading Hours Monitor Controller*")
+    send_telegram_message_admin("🛑 *Shutting down FastAPI Trading Hours Monitor Controller-1*")
     
     # Cancel all background tasks
     app.state.task_monitor.cancel()

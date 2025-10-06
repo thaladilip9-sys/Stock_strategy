@@ -8,12 +8,23 @@ from datetime import datetime, timedelta
 import pandas as pd
 from src.utils.get_chartlink_data import fetch_chartink_data
 from src.utils.search_your_stocks import get_stock_details
-import time
+import time,logging
 from src.utils.angel_one_connect import AngelOneConnect
 from src.utils.send_message import send_telegram_message
 
 
 load_dotenv('./env/.env.prod')
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('stock_option_analysis.log'),
+        logging.StreamHandler()
+    ]
+)
+
 
 class UpdateStockOptData:
     def __init__(self):
@@ -22,33 +33,6 @@ class UpdateStockOptData:
         self.connect_instance = AngelOneConnect()
         self.smart_api = self.connect_instance.connect()
         
-    # def create_session(self):
-    #     """Create Angel One session"""
-    #     try:
-    #         api_key = os.getenv("ANGEL_API_KEY")
-    #         client_id = os.getenv("ANGEL_CLIENT_ID")
-    #         password = os.getenv("ANGEL_PASSWORD")
-    #         totp_secret = os.getenv("ANGEL_TOTP")
-            
-    #         self.smart_api = SmartConnect(api_key)
-            
-    #         # Generate TOTP
-    #         totp_secret_clean = ''.join(c for c in totp_secret if c.isalnum()).upper()
-    #         totp = pyotp.TOTP(totp_secret_clean).now()
-            
-    #         # Generate session
-    #         data = self.smart_api.generateSession(client_id, password, totp)
-            
-    #         if data['status'] == False:
-    #             print(f"❌ Session generation failed: {data}")
-    #             return False
-                
-    #         print("✅ Angel One session created successfully")
-    #         return True
-            
-    #     except Exception as e:
-    #         print(f"❌ Error creating session: {e}")
-    #         return False
     
     def get_historical_data(self, symbol_token, exchange="NSE"):
         """Get historical OHLC data for the stock"""
@@ -65,7 +49,7 @@ class UpdateStockOptData:
                 "todate": end_date.strftime('%Y-%m-%d 15:30')
             }
             
-            print(f"   📅 Fetching OHLC data for {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+            logging.info(f"   📅 Fetching OHLC data for {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
             
             # Add delay to avoid rate limiting
             time.sleep(1)
@@ -83,11 +67,11 @@ class UpdateStockOptData:
                     'volume': float(latest_candle[5])
                 }
             else:
-                print(f"   ❌ No historical data received")
+                logging.error(f"   ❌ No historical data received")
                 return None
                 
         except Exception as e:
-            print(f"   ❌ Historical data error: {e}")
+            logging.error(f"   ❌ Historical data error: {e}")
             return None
 
     def get_option_day_high_low(self, option_data):
@@ -107,11 +91,11 @@ class UpdateStockOptData:
                     'day_close': option_historical['close']
                 }
             else:
-                print(f"   ❌ Could not fetch OHLC data for option {option_data['symbol']}")
+                logging.error(f"   ❌ Could not fetch OHLC data for option {option_data['symbol']}")
                 return None
                 
         except Exception as e:
-            print(f"   ❌ Error fetching option OHLC data: {e}")
+            logging.error(f"   ❌ Error fetching option OHLC data: {e}")
             return None
 
     def calculate_trading_levels(self, option_day_high, current_ltp):
@@ -141,7 +125,7 @@ class UpdateStockOptData:
             }
             
         except Exception as e:
-            print(f"   ❌ Error calculating trading levels: {e}")
+            logging.error(f"   ❌ Error calculating trading levels: {e}")
             return None
 
     def get_option_chain_from_input(self, symbol, input_data):
@@ -160,22 +144,23 @@ class UpdateStockOptData:
                     strike_price = float(option.get('strike', 0)) / 100
                     
                     # Determine option type from symbol
-                    option_type = 'CE' if 'CE' in option_symbol else 'PE'
-                    
-                    options_data.append({
-                        'symbol': option_symbol,
-                        'token': option.get('token'),
-                        'strike': strike_price,
-                        'type': option_type,
-                        'expiry': option.get('expiry', ''),
-                        'lotsize': option.get('lotsize', 1)
-                    })
+                    option_type=option_type = option_symbol[-2:] if option_symbol[-2:] in ("CE", "PE") else None
+
+                    if option_type!=None:
+                        options_data.append({
+                            'symbol': option_symbol,
+                            'token': option.get('token'),
+                            'strike': strike_price,
+                            'type': option_type,
+                            'expiry': option.get('expiry', ''),
+                            'lotsize': option.get('lotsize', 1)
+                        })
             
-            print(f"   📊 Found {len(options_data)} options contracts for {symbol}")
+            logging.info(f"   📊 Found {len(options_data)} options contracts for {symbol}")
             return options_data
             
         except Exception as e:
-            print(f"   ❌ Error getting option chain from input: {e}")
+            logging.error(f"   ❌ Error getting option chain from input: {e}")
             return None
         
     def filter_current_month_options(self, options):
@@ -207,20 +192,20 @@ class UpdateStockOptData:
                         current_month_options.append(option)
                         
                 except ValueError:
-                    print(f"⚠️  Could not parse expiry: {expiry_str}")
+                    logging.info(f"⚠️  Could not parse expiry: {expiry_str}")
                     continue
             
-            # Print expiry statistics
-            print(f"   📅 Expiry distribution:")
+            # logging.info expiry statistics
+            logging.info(f"   📅 Expiry distribution:")
             for expiry, count in expiry_count.items():
                 status = "✅ CURRENT" if expiry == current_date.strftime('%b-%Y') else "📅 FUTURE"
-                print(f"      {expiry}: {count} options {status}")
+                logging.info(f"      {expiry}: {count} options {status}")
             
-            print(f"   ✅ Current month options filtered: {len(current_month_options)}")
+            logging.info(f"   ✅ Current month options filtered: {len(current_month_options)}")
             return current_month_options
             
         except Exception as e:
-            print(f"❌ Error in current month filtering: {e}")
+            logging.error(f"❌ Error in current month filtering: {e}")
             return options  # Return original list if error occurs
 
 
@@ -234,8 +219,8 @@ class UpdateStockOptData:
             ce_options = self.filter_current_month_options(ce_options)
             pe_options = self.filter_current_month_options(pe_options)
 
-            print(f"   📈 {len(ce_options)} CE options, {len(pe_options)} PE options found")
-            print(f"   Stock Day High: ₹{day_high:,.2f}")
+            logging.info(f"   📈 {len(ce_options)} CE options, {len(pe_options)} PE options found")
+            logging.info(f"   Stock Day High: ₹{day_high:,.2f}")
             
             # For CE: select strike just below day high
             valid_ce = [opt for opt in ce_options if opt['strike'] < day_high]
@@ -243,10 +228,10 @@ class UpdateStockOptData:
                 # Sort by proximity to day high (closest first)
                 valid_ce.sort(key=lambda x: abs(x['strike'] - day_high))
                 best_ce = valid_ce[0]  # Closest strike below day high
-                print(f"   ✅ Best CE: ₹{best_ce['strike']:,.2f} (Difference: -₹{day_high - best_ce['strike']:,.2f})")
+                logging.info(f"   ✅ Best CE: ₹{best_ce['strike']:,.2f} (Difference: -₹{day_high - best_ce['strike']:,.2f})")
             else:
                 best_ce = None
-                print(f"   ❌ No CE strikes below day high")
+                logging.error(f"   ❌ No CE strikes below day high")
             
             # For PE: select strike just above day high
             valid_pe = [opt for opt in pe_options if opt['strike'] > day_high]
@@ -254,15 +239,15 @@ class UpdateStockOptData:
                 # Sort by proximity to day high (closest first)
                 valid_pe.sort(key=lambda x: abs(x['strike'] - day_high))
                 best_pe = valid_pe[0]  # Closest strike above day high
-                print(f"   ✅ Best PE: ₹{best_pe['strike']:,.2f} (Difference: +₹{best_pe['strike'] - day_high:,.2f})")
+                logging.info(f"   ✅ Best PE: ₹{best_pe['strike']:,.2f} (Difference: +₹{best_pe['strike'] - day_high:,.2f})")
             else:
                 best_pe = None
-                print(f"   ❌ No PE strikes above day high")
+                logging.error(f"   ❌ No PE strikes above day high")
             
             return best_ce, best_pe, valid_pe
             
         except Exception as e:
-            print(f"   ❌ Error selecting best strikes: {e}")
+            logging.error(f"   ❌ Error selecting best strikes: {e}")
             return None, None, []
 
     def analyze_stock_with_options(self, stock_data, input_data):
@@ -271,8 +256,8 @@ class UpdateStockOptData:
         name = stock_data.get('name')
         token = stock_data.get('token')
         
-        print(f"\n🔍 Analyzing {name} ({symbol}) - Token: {token}")
-        print("=" * 60)
+        logging.info(f"\n🔍 Analyzing {name} ({symbol}) - Token: {token}")
+        logging.info("=" * 60)
         
         # Add delay between API calls
         time.sleep(1)
@@ -281,7 +266,7 @@ class UpdateStockOptData:
         historical_data = self.get_historical_data(token)
         
         if not historical_data:
-            print(f"❌ Could not fetch OHLC data for {symbol}")
+            logging.error(f"❌ Could not fetch OHLC data for {symbol}")
             return None
         
         day_open = historical_data['open']
@@ -292,30 +277,30 @@ class UpdateStockOptData:
         
         # Check if stock price is above ₹1000
         if day_close < self.min_price:
-            print(f"❌ Stock price ₹{day_close:,.2f} is below ₹{self.min_price:,} filter")
+            logging.error(f"❌ Stock price ₹{day_close:,.2f} is below ₹{self.min_price:,} filter")
             return None
         
-        print(f"✅ Stock meets price filter: ₹{day_close:,.2f} > ₹{self.min_price:,}")
+        logging.info(f"✅ Stock meets price filter: ₹{day_close:,.2f} > ₹{self.min_price:,}")
         
-        print(f"📊 STOCK OHLC Data:")
-        print(f"   Open:   ₹{day_open:,.2f}")
-        print(f"   High:   ₹{day_high:,.2f}")
-        print(f"   Low:    ₹{day_low:,.2f}") 
-        print(f"   Close:  ₹{day_close:,.2f}")
-        print(f"   Volume: {volume:,.0f}")
+        logging.info(f"📊 STOCK OHLC Data:")
+        logging.info(f"   Open:   ₹{day_open:,.2f}")
+        logging.info(f"   High:   ₹{day_high:,.2f}")
+        logging.info(f"   Low:    ₹{day_low:,.2f}") 
+        logging.info(f"   Close:  ₹{day_close:,.2f}")
+        logging.info(f"   Volume: {volume:,.0f}")
         
         # Get option chain from input data
         options = self.get_option_chain_from_input(symbol, input_data)
         
         if not options:
-            print(f"❌ No options found for {symbol}")
+            logging.error(f"❌ No options found for {symbol}")
             return None
         
         # Select best strikes based on day high
         best_ce, best_pe, pe_options = self.select_best_strikes(options, day_high)
         
-        print(f"\n🎯 OPTION STRATEGY (Based on Stock Day High: ₹{day_high:,.2f})")
-        print("-" * 50)
+        logging.info(f"\n🎯 OPTION STRATEGY (Based on Stock Day High: ₹{day_high:,.2f})")
+        logging.info("-" * 50)
         
         result_data = {
             'stock': stock_data,
@@ -328,13 +313,13 @@ class UpdateStockOptData:
         
         # Analyze CE option
         if best_ce:
-            print(f"🟢 CALL (CE) - Strike below Day High:")
-            print(f"   Symbol:    {best_ce['symbol']}")
-            print(f"   Strike:    ₹{best_ce['strike']:,.2f}")
-            print(f"   Token:     {best_ce['token']}")
-            print(f"   Expiry:    {best_ce['expiry']}")
-            print(f"   Lot Size:  {best_ce['lotsize']}")
-            print(f"   Difference: -₹{day_high - best_ce['strike']:,.2f} from Stock Day High")
+            logging.info(f"🟢 CALL (CE) - Strike below Day High:")
+            logging.info(f"   Symbol:    {best_ce['symbol']}")
+            logging.info(f"   Strike:    ₹{best_ce['strike']:,.2f}")
+            logging.info(f"   Token:     {best_ce['token']}")
+            logging.info(f"   Expiry:    {best_ce['expiry']}")
+            logging.info(f"   Lot Size:  {best_ce['lotsize']}")
+            logging.info(f"   Difference: -₹{day_high - best_ce['strike']:,.2f} from Stock Day High")
             
             # Get LTP and OHLC for CE option
             ce_ltp = self.get_ltp_data(best_ce)
@@ -342,42 +327,42 @@ class UpdateStockOptData:
             
             if ce_ltp:
                 current_ltp = float(ce_ltp.get('ltp', 0))
-                print(f"   LTP:       ₹{current_ltp:,.2f}")
+                logging.info(f"   LTP:       ₹{current_ltp:,.2f}")
                 best_ce['ltp'] = current_ltp
             
             if ce_ohlc:
-                print(f"   Option Day High:  ₹{ce_ohlc['day_high']:,.2f}")
-                print(f"   Option Day Low:   ₹{ce_ohlc['day_low']:,.2f}")
-                print(f"   Option Day Open:  ₹{ce_ohlc['day_open']:,.2f}")
-                print(f"   Option Day Close: ₹{ce_ohlc['day_close']:,.2f}")
+                logging.info(f"   Option Day High:  ₹{ce_ohlc['day_high']:,.2f}")
+                logging.info(f"   Option Day Low:   ₹{ce_ohlc['day_low']:,.2f}")
+                logging.info(f"   Option Day Open:  ₹{ce_ohlc['day_open']:,.2f}")
+                logging.info(f"   Option Day Close: ₹{ce_ohlc['day_close']:,.2f}")
                 best_ce['option_ohlc'] = ce_ohlc
                 
                 # Calculate trading levels for CE
                 if ce_ohlc['day_high'] > 0:
                     trading_levels = self.calculate_trading_levels(ce_ohlc['day_high'], best_ce.get('ltp', 0))
                     if trading_levels:
-                        print(f"\n   📊 TRADING STRATEGY FOR CE:")
-                        print(f"   🟢 Buy Entry:    ₹{trading_levels['buy_entry']:,.2f} (Above Option Day High)")
-                        print(f"   🎯 Target:       ₹{trading_levels['target']:,.2f} (+5% from Option Day High)")
-                        print(f"   🛑 Stoploss:     ₹{trading_levels['stoploss']:,.2f} (-5% from Option Day High)")
-                        print(f"   📈 Risk-Reward:  {trading_levels['risk_reward_ratio']}:1")
-                        print(f"   📊 Upside:       +{trading_levels['upside_potential']}%")
-                        print(f"   📉 Downside:     -{trading_levels['downside_risk']}%")
+                        logging.info(f"\n   📊 TRADING STRATEGY FOR CE:")
+                        logging.info(f"   🟢 Buy Entry:    ₹{trading_levels['buy_entry']:,.2f} (Above Option Day High)")
+                        logging.info(f"   🎯 Target:       ₹{trading_levels['target']:,.2f} (+5% from Option Day High)")
+                        logging.info(f"   🛑 Stoploss:     ₹{trading_levels['stoploss']:,.2f} (-5% from Option Day High)")
+                        logging.info(f"   📈 Risk-Reward:  {trading_levels['risk_reward_ratio']}:1")
+                        logging.info(f"   📊 Upside:       +{trading_levels['upside_potential']}%")
+                        logging.info(f"   📉 Downside:     -{trading_levels['downside_risk']}%")
                         best_ce['trading_levels'] = trading_levels
             
             result_data['options']['ce'] = best_ce
         else:
-            print(f"❌ No suitable CE strike found below Day High")
+            logging.error(f"❌ No suitable CE strike found below Day High")
         
         # Analyze PE option
         if best_pe:
-            print(f"\n🔴 PUT (PE) - Strike above Day High:")
-            print(f"   Symbol:    {best_pe['symbol']}")
-            print(f"   Strike:    ₹{best_pe['strike']:,.2f}")
-            print(f"   Token:     {best_pe['token']}")
-            print(f"   Expiry:    {best_pe['expiry']}")
-            print(f"   Lot Size:  {best_pe['lotsize']}")
-            print(f"   Difference: +₹{best_pe['strike'] - day_high:,.2f} from Stock Day High")
+            logging.info(f"\n🔴 PUT (PE) - Strike above Day High:")
+            logging.info(f"   Symbol:    {best_pe['symbol']}")
+            logging.info(f"   Strike:    ₹{best_pe['strike']:,.2f}")
+            logging.info(f"   Token:     {best_pe['token']}")
+            logging.info(f"   Expiry:    {best_pe['expiry']}")
+            logging.info(f"   Lot Size:  {best_pe['lotsize']}")
+            logging.info(f"   Difference: +₹{best_pe['strike'] - day_high:,.2f} from Stock Day High")
             
             # Get LTP and OHLC for PE option
             pe_ltp = self.get_ltp_data(best_pe)
@@ -385,38 +370,38 @@ class UpdateStockOptData:
             
             if pe_ltp:
                 current_ltp = float(pe_ltp.get('ltp', 0))
-                print(f"   LTP:       ₹{current_ltp:,.2f}")
+                logging.info(f"   LTP:       ₹{current_ltp:,.2f}")
                 best_pe['ltp'] = current_ltp
             
             if pe_ohlc:
-                print(f"   Option Day High:  ₹{pe_ohlc['day_high']:,.2f}")
-                print(f"   Option Day Low:   ₹{pe_ohlc['day_low']:,.2f}")
-                print(f"   Option Day Open:  ₹{pe_ohlc['day_open']:,.2f}")
-                print(f"   Option Day Close: ₹{pe_ohlc['day_close']:,.2f}")
+                logging.info(f"   Option Day High:  ₹{pe_ohlc['day_high']:,.2f}")
+                logging.info(f"   Option Day Low:   ₹{pe_ohlc['day_low']:,.2f}")
+                logging.info(f"   Option Day Open:  ₹{pe_ohlc['day_open']:,.2f}")
+                logging.info(f"   Option Day Close: ₹{pe_ohlc['day_close']:,.2f}")
                 best_pe['option_ohlc'] = pe_ohlc
                 
                 # Calculate trading levels for PE
                 if pe_ohlc['day_high'] > 0:
                     trading_levels = self.calculate_trading_levels(pe_ohlc['day_high'], best_pe.get('ltp', 0))
                     if trading_levels:
-                        print(f"\n   📊 TRADING STRATEGY FOR PE:")
-                        print(f"   🟢 Buy Entry:    ₹{trading_levels['buy_entry']:,.2f} (Above Option Day High)")
-                        print(f"   🎯 Target:       ₹{trading_levels['target']:,.2f} (+5% from Option Day High)")
-                        print(f"   🛑 Stoploss:     ₹{trading_levels['stoploss']:,.2f} (-5% from Option Day High)")
-                        print(f"   📈 Risk-Reward:  {trading_levels['risk_reward_ratio']}:1")
-                        print(f"   📊 Upside:       +{trading_levels['upside_potential']}%")
-                        print(f"   📉 Downside:     -{trading_levels['downside_risk']}%")
+                        logging.info(f"\n   📊 TRADING STRATEGY FOR PE:")
+                        logging.info(f"   🟢 Buy Entry:    ₹{trading_levels['buy_entry']:,.2f} (Above Option Day High)")
+                        logging.info(f"   🎯 Target:       ₹{trading_levels['target']:,.2f} (+5% from Option Day High)")
+                        logging.info(f"   🛑 Stoploss:     ₹{trading_levels['stoploss']:,.2f} (-5% from Option Day High)")
+                        logging.info(f"   📈 Risk-Reward:  {trading_levels['risk_reward_ratio']}:1")
+                        logging.info(f"   📊 Upside:       +{trading_levels['upside_potential']}%")
+                        logging.info(f"   📉 Downside:     -{trading_levels['downside_risk']}%")
                         best_pe['trading_levels'] = trading_levels
             
             result_data['options']['pe'] = best_pe
             
             # Show alternative PE strikes
             if len(pe_options) > 1:
-                print(f"\n📋 Alternative PE Strikes:")
+                logging.info(f"\n📋 Alternative PE Strikes:")
                 for i, pe in enumerate(pe_options[1:4], 2):  # Show next 3 strikes
-                    print(f"   {i}. Strike: ₹{pe['strike']:,.2f} (+₹{pe['strike'] - day_high:,.2f}) - {pe['symbol']}")
+                    logging.info(f"   {i}. Strike: ₹{pe['strike']:,.2f} (+₹{pe['strike'] - day_high:,.2f}) - {pe['symbol']}")
         else:
-            print(f"❌ No suitable PE strike found above Day High")
+            logging.error(f"❌ No suitable PE strike found above Day High")
         
         return result_data
     
@@ -425,13 +410,13 @@ class UpdateStockOptData:
         # if not self.create_session():
         #     return None
         
-        print("🎯 PROCESSING STOCKS > ₹1000")
-        print("=" * 80)
+        logging.info("🎯 PROCESSING STOCKS > ₹1000")
+        logging.info("=" * 80)
         
         # Get stocks from input data
         stocks_list = input_data.get('stocks', [])
         
-        print(f"📈 Found {len(stocks_list)} stocks to analyze")
+        logging.info(f"📈 Found {len(stocks_list)} stocks to analyze")
         
         results = []
         stocks_above_1000 = 0
@@ -445,14 +430,14 @@ class UpdateStockOptData:
             # Add delay between stock analysis
             time.sleep(2)
         
-        print(f"\n✅ Analysis Complete: {stocks_above_1000}/{len(stocks_list)} stocks above ₹{self.min_price:,}")
+        logging.info(f"\n✅ Analysis Complete: {stocks_above_1000}/{len(stocks_list)} stocks above ₹{self.min_price:,}")
         return results
     
     def get_ltp_data(self, option_data):
         """Get last traded price for options"""
         try:
             if not option_data or 'token' not in option_data:
-                print(f"   ❌ Invalid option data for LTP")
+                logging.error(f"   ❌ Invalid option data for LTP")
                 return None
                 
             ltp_data = self.smart_api.ltpData(
@@ -464,11 +449,11 @@ class UpdateStockOptData:
             if ltp_data and 'status' in ltp_data and ltp_data['status']:
                 return ltp_data['data']
             else:
-                print(f"   ❌ LTP data error for {option_data['symbol']}")
+                logging.error(f"   ❌ LTP data error for {option_data['symbol']}")
                 return None
                 
         except Exception as e:
-            print(f"   ❌ Error fetching LTP data for {option_data['symbol']}: {e}")
+            logging.error(f"   ❌ Error fetching LTP data for {option_data['symbol']}: {e}")
             return None
 
 
@@ -502,51 +487,49 @@ class UpdateStockOptData:
 
             message=""
             
-            print(f"\n💾 Analysis saved to: {filename}")
+            logging.info(f"\n💾 Analysis saved to: {filename}")
             
-            # Print summary
-            print(f"\n📊 STOCK OPTIONS TRADING STRATEGY SUMMARY")
+            # logging.info summary
+            logging.info(f"\n📊 STOCK OPTIONS TRADING STRATEGY SUMMARY")
             message+=f"\n *📊 STOCK OPTIONS TRADING STRATEGY SUMMARY* \n"
-            print("=" * 80)
+            logging.info("=" * 80)
             for result in results:
                 stock = result['stock']
                 historical = result['historical']
                 options = result['options']
                 
-                print(f"\n📈 {stock['name']} ({stock['symbol']})")
+                logging.info(f"\n📈 {stock['name']} ({stock['symbol']})")
                 message+=f"\n📈 *{stock['name']} ({stock['symbol']})*\n"
-                print(f"   Stock Price: ₹{historical['close']:,.2f} | Stock Day High: ₹{historical['high']:,.2f}")
+                logging.info(f"   Stock Price: ₹{historical['close']:,.2f} | Stock Day High: ₹{historical['high']:,.2f}")
                 message+=f"   *Stock Price:* ₹{historical['close']:,.2f} | *Stock Day High:* ₹{historical['high']:,.2f}\n"
                 
                 if options['ce']:
                     ce = options['ce']
                     trading_levels = ce.get('trading_levels', {})
-                    print(f"   🟢 CE: {ce['symbol']}")
+                    logging.info(f"   🟢 CE: {ce['symbol']}")
                     message+=f"\n🟢 *CE:* {ce['symbol']}\n"
-                    print(f"      Strike: ₹{ce['strike']:,.2f} | LTP: ₹{ce.get('ltp', 'N/A')}")
+                    logging.info(f"      Strike: ₹{ce['strike']:,.2f} | LTP: ₹{ce.get('ltp', 'N/A')}")
                     message+=f"      *Strike:* ₹{ce['strike']:,.2f} | *LTP:* ₹{ce.get('ltp', 'N/A')}\n"
-                    print(f"      Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}")
+                    logging.info(f"      Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}")
                     message+=f"      *Entry:* ₹{trading_levels.get('buy_entry', 'N/A')} | *Target:* ₹{trading_levels.get('target', 'N/A')}\n"
-                    print(f"      Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1")
+                    logging.info(f"      Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1")
                     message+=f"      *Stoploss:* ₹{trading_levels.get('stoploss', 'N/A')} | *R:R:* {trading_levels.get('risk_reward_ratio', 'N/A')}:1\n"
                 
                 if options['pe']:
                     pe = options['pe']
                     trading_levels = pe.get('trading_levels', {})
-                    print(f"   🔴 PE: {pe['symbol']}")
+                    logging.info(f"   🔴 PE: {pe['symbol']}")
                     message+=f"\n🔴 *PE:* {pe['symbol']}\n"
-                    print(f"      Strike: ₹{pe['strike']:,.2f} | LTP: ₹{pe.get('ltp', 'N/A')}")
+                    logging.info(f"      Strike: ₹{pe['strike']:,.2f} | LTP: ₹{pe.get('ltp', 'N/A')}")
                     message+=f"      *Strike:* ₹{pe['strike']:,.2f} | *LTP:* ₹{pe.get('ltp', 'N/A')}\n"
-                    print(f"      Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}")
+                    logging.info(f"      Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}")
                     message+=f"      *Entry:* ₹{trading_levels.get('buy_entry', 'N/A')} | *Target:* ₹{trading_levels.get('target', 'N/A')}\n"
-                    print(f"      Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1")
+                    logging.info(f"      Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1")
                     message+=f"      *Stoploss:* ₹{trading_levels.get('stoploss', 'N/A')} | *R:R:* {trading_levels.get('risk_reward_ratio', 'N/A')}:1\n"
            
         else:
-            print("❌ No stocks found above ₹1000 or analysis failed")
+            logging.error("❌ No stocks found above ₹1000 or analysis failed")
 
         send_telegram_message(message)
-        
-# from src.main.interaday_stock_options.angel_one.stock_options_analysis import UpdateStockOptData
-# analyzer = UpdateStockOptData()
-# analyzer.run()
+
+
