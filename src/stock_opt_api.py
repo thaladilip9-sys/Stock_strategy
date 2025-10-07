@@ -492,9 +492,9 @@ async def health_check():
     }
 
 
-@app.get("/health-render", include_in_schema=False)
+@app.get("/health-digitalocean", include_in_schema=False)
 async def health_check():
-    """Simple health check for Render"""
+    """Simple health check for digitalocean"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 

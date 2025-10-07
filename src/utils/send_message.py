@@ -33,7 +33,7 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-def send_telegram_message(message: str):
+def send_telegram_message(message: str,parse_mode="Markdown"):
     """Send message via Telegram Bot API"""
     
     payload = {
