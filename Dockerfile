@@ -41,29 +41,51 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Set working directory
 WORKDIR /app
 
+# Set runtime environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Asia/Kolkata \
-    PORT=8080 \   
-    # Changed to 8080 for DigitalOcean
+    PORT=8080 \
     MAX_WORKERS=1 \
     LOG_LEVEL=info \
     ENVIRONMENT=production
 
-# ... previous Dockerfile content ...
+# Create non-root user and necessary directories
+RUN useradd --create-home --shell /bin/bash app && \
+    mkdir -p /app/logs /app/stock_interaday_json /app/env && \
+    chown -R app:app /app
 
-# Expose FastAPI port - DigitalOcean uses 8080
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/* && \
+    cp /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
+# Copy application code
+COPY --chown=app:app . .
+
+# Add src directory to Python path
+ENV PYTHONPATH=/app/src
+
+# Switch to non-root user
+USER app
+
+# Create volume mount points for persistent data
+VOLUME ["/app/logs", "/app/stock_interaday_json", "/app/env"]
+
+# Expose FastAPI port
 EXPOSE 8080
 
-# Health check for FastAPI endpoint - use 8080
+# Health check for FastAPI endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Use port 8080 in CMD
+# Use the correct module path with src
 CMD ["uvicorn", "src.stock_opt_api:app", \
      "--host", "0.0.0.0", \
-     "--port", "8080", \  
-     # Changed to 8080
+     "--port", "8080", \
      "--workers", "1", \
      "--log-level", "info", \
      "--proxy-headers", \
