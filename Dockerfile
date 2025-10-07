@@ -46,7 +46,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Asia/Kolkata \
     PORT=10000 \
-    MAX_WORKERS=4 \
+    MAX_WORKERS=1 \
     LOG_LEVEL=info \
     ENVIRONMENT=production
 
@@ -73,17 +73,11 @@ USER app
 VOLUME ["/app/logs", "/app/stock_interaday_json", "/app/env"]
 
 # Expose FastAPI port
-EXPOSE ${PORT}
+EXPOSE 10000
 
 # Health check for FastAPI endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+    CMD curl -f http://localhost:10000/health || exit 1
 
-# Command to run the FastAPI application with proper configuration
-CMD ["uvicorn", "src.stock_opt_api:app", \
-     "--host", "0.0.0.0", \
-     "--port", "${PORT}", \
-     "--workers", "${MAX_WORKERS}", \
-     "--log-level", "${LOG_LEVEL}", \
-     "--proxy-headers", \
-     "--forwarded-allow-ips", "*"]
+# Use shell form to expand environment variables
+CMD uvicorn src.stock_opt_api:app --host 0.0.0.0 --port ${PORT:-10000} --workers ${MAX_WORKERS:-1} --log-level ${LOG_LEVEL:-info} --proxy-headers --forwarded-allow-ips "*"

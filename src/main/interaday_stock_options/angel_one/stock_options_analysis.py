@@ -460,16 +460,26 @@ class UpdateStockOptData:
     # Example usage
     def run(self):
         # Your input data
-        input_payload = "( {33489} ( daily high < 1 day ago high and daily low > 1 day ago low and daily close > daily open and daily close > 1000 and daily close > daily open and 1 day ago close < 1 day ago open and daily close > daily open and 1 day ago close < 1 day ago open ) ) "
+        # 
+        input_payload_red = "( {33489} ( daily high < 1 day ago high and daily low > 1 day ago low and daily close < daily open and daily close > 1000 ) )"
 
         # Fetch data (using your provided data structure)
-        stocks_data = fetch_chartink_data(input_payload)
+        stocks_data_red = fetch_chartink_data(input_payload_red)
+        stock_details_red = get_stock_details(stocks_data_red)
 
-        stock_details = get_stock_details(stocks_data)
+        input_payload_green = "( {33489} ( daily high < 1 day ago high and daily low > 1 day ago low and daily close > daily open and daily close > 1000 ) )"
+
+        stocks_data_green = fetch_chartink_data(input_payload_green)
+        stock_details_green = get_stock_details(stocks_data_green)
+
+        stock_details={"stocks":stock_details_red['stocks']+stock_details_green['stocks'],
+                       "options":stock_details_red['options']+stock_details_green['options']}  # Assuming both have same options structure
+
 
         # analyzer = StockAnalysis()
         results = self.process_stocks_list(stock_details)
-        
+        message = ""
+
         # Save results to JSON
         if results:
             timestamp = datetime.now().strftime("%A_%Y-%m-%d")
@@ -484,52 +494,53 @@ class UpdateStockOptData:
             
             with open(filename, 'w') as f:
                 json.dump(output_data, f, indent=4)
-
-            message=""
             
             logging.info(f"\n💾 Analysis saved to: {filename}")
             
-            # logging.info summary
-            logging.info(f"\n📊 STOCK OPTIONS TRADING STRATEGY SUMMARY")
-            message+=f"\n *📊 STOCK OPTIONS TRADING STRATEGY SUMMARY* \n"
-            logging.info("=" * 80)
+            # Logging summary
+            logging.info(f"\n📊 STOCK OPTIONS TRADING STRATEGY SUMMARY - {timestamp}")
+            message = f"📊 STOCK OPTIONS TRADING STRATEGY SUMMARY - {timestamp}\n\n"
+        
             for result in results:
                 stock = result['stock']
                 historical = result['historical']
                 options = result['options']
                 
                 logging.info(f"\n📈 {stock['name']} ({stock['symbol']})")
-                message+=f"\n📈 *{stock['name']} ({stock['symbol']})*\n"
+                message += f"📈 {stock['name']} ({stock['symbol']})\n"
+                message += f"Stock Price: ₹{historical['close']:,.2f} | Stock Day High: ₹{historical['high']:,.2f}\n"
                 logging.info(f"   Stock Price: ₹{historical['close']:,.2f} | Stock Day High: ₹{historical['high']:,.2f}")
-                message+=f"   *Stock Price:* ₹{historical['close']:,.2f} | *Stock Day High:* ₹{historical['high']:,.2f}\n"
                 
-                if options['ce']:
+                # CE Option
+                if options.get('ce'):
                     ce = options['ce']
                     trading_levels = ce.get('trading_levels', {})
                     logging.info(f"   🟢 CE: {ce['symbol']}")
-                    message+=f"\n🟢 *CE:* {ce['symbol']}\n"
+                    message += f"\n🟢 CE: {ce['symbol']}\n"
+                    message += f"Strike: ₹{ce['strike']:,.2f} | LTP: {ce.get('ltp', 'N/A')}\n"
+                    message += f"Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}\n"
+                    message += f"Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1\n"
                     logging.info(f"      Strike: ₹{ce['strike']:,.2f} | LTP: ₹{ce.get('ltp', 'N/A')}")
-                    message+=f"      *Strike:* ₹{ce['strike']:,.2f} | *LTP:* ₹{ce.get('ltp', 'N/A')}\n"
                     logging.info(f"      Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}")
-                    message+=f"      *Entry:* ₹{trading_levels.get('buy_entry', 'N/A')} | *Target:* ₹{trading_levels.get('target', 'N/A')}\n"
                     logging.info(f"      Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1")
-                    message+=f"      *Stoploss:* ₹{trading_levels.get('stoploss', 'N/A')} | *R:R:* {trading_levels.get('risk_reward_ratio', 'N/A')}:1\n"
                 
-                if options['pe']:
+                # PE Option
+                if options.get('pe'):
                     pe = options['pe']
                     trading_levels = pe.get('trading_levels', {})
                     logging.info(f"   🔴 PE: {pe['symbol']}")
-                    message+=f"\n🔴 *PE:* {pe['symbol']}\n"
+                    message += f"\n🔴 PE: {pe['symbol']}\n"
+                    message += f"Strike: ₹{pe['strike']:,.2f} | LTP: {pe.get('ltp', 'N/A')}\n"
+                    message += f"Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}\n"
+                    message += f"Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1\n"
                     logging.info(f"      Strike: ₹{pe['strike']:,.2f} | LTP: ₹{pe.get('ltp', 'N/A')}")
-                    message+=f"      *Strike:* ₹{pe['strike']:,.2f} | *LTP:* ₹{pe.get('ltp', 'N/A')}\n"
                     logging.info(f"      Entry: ₹{trading_levels.get('buy_entry', 'N/A')} | Target: ₹{trading_levels.get('target', 'N/A')}")
-                    message+=f"      *Entry:* ₹{trading_levels.get('buy_entry', 'N/A')} | *Target:* ₹{trading_levels.get('target', 'N/A')}\n"
                     logging.info(f"      Stoploss: ₹{trading_levels.get('stoploss', 'N/A')} | R:R: {trading_levels.get('risk_reward_ratio', 'N/A')}:1")
-                    message+=f"      *Stoploss:* ₹{trading_levels.get('stoploss', 'N/A')} | *R:R:* {trading_levels.get('risk_reward_ratio', 'N/A')}:1\n"
-           
+                
+                # Send summary via Telegram with proper formatting
+                send_telegram_message(message)
+                
+            
         else:
             logging.error("❌ No stocks found above ₹1000 or analysis failed")
-
-        send_telegram_message(message)
-
-
+            send_telegram_message("❌ No stocks found above ₹1000 or analysis failed")   
