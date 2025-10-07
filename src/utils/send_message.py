@@ -33,22 +33,35 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-def send_telegram_message(message: str,parse_mode="Markdown"):
-    """Send message via Telegram Bot API"""
+def send_telegram_message(message: str):
+    """Send message via Telegram Bot API with safe formatting"""
     
-    payload = {
+    # Try with Markdown first, fallback to plain text if it fails
+    payload_markdown = {
         "chat_id": CHAT_ID,
         "text": message,
         "parse_mode": "Markdown"
     }
+    
     try:
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload_markdown)
         if response.status_code == 200:
-            print("✅ Telegram message sent!")
+            print("✅ Telegram message sent with Markdown!")
             return True
         else:
-            print(f"❌ Failed to send Telegram message: {response.text}")
-            return False
+            # If Markdown fails, try without formatting
+            print("⚠️  Markdown failed, trying plain text...")
+            payload_plain = {
+                "chat_id": CHAT_ID,
+                "text": message
+            }
+            response = requests.post(url, json=payload_plain)
+            if response.status_code == 200:
+                print("✅ Telegram message sent as plain text!")
+                return True
+            else:
+                print(f"❌ Failed to send Telegram message: {response.text}")
+                return False
     except Exception as e:
         print(f"❌ Exception while sending Telegram message: {e}")
         return False
