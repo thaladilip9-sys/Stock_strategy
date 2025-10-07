@@ -38,10 +38,14 @@ class ParallelOptionMonitor:
         self.telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
         self.monitored_options = []
-        self.alerted_targets = set()
-        self.alerted_stoploss = set()
-        self.alerted_entries = set()
-        self.entered_positions = set()  # NEW: Track positions that have been entered
+        
+        # Enhanced tracking sets with mutual exclusion
+        self.alerted_targets = set()  # Options that hit target
+        self.alerted_stoploss = set()  # Options that hit stoploss
+        self.alerted_entries = set()  # Options that triggered entry
+        self.entered_positions = set()  # Track positions that have been entered
+        self.completed_positions = set()  # Track positions that are completed (target or stoploss hit)
+        
         self.last_ltp = {}  # Store last LTP for change detection
         self.is_ws_connected = False
         self.ws_thread = None
@@ -62,8 +66,88 @@ class ParallelOptionMonitor:
         self.last_alert_time = defaultdict(float)
         self.alert_cooldown = 2  # seconds between same option alerts
 
+        # Enhanced Memory Context
+        self.monitoring_context = {
+            'session_start_time': datetime.now().isoformat(),
+            'total_alerts_sent': 0,
+            'alerts_by_type': {'entry': 0, 'target': 0, 'stoploss': 0},
+            'options_loaded': 0,
+            'gap_up_skipped': 0,
+            'webSocket_reconnects': 0,
+            'last_health_report': None,
+            'performance_metrics': {
+                'avg_alert_processing_time': 0,
+                'max_queue_size': 0,
+                'total_data_points': 0
+            },
+            'trading_session': {
+                'start_time': datetime.now().isoformat(),
+                'market_status': 'UNKNOWN',
+                'last_sync_time': None
+            },
+            'position_management': {
+                'active_positions': 0,
+                'completed_positions': 0,
+                'profitable_exits': 0,
+                'loss_exits': 0
+            }
+        }
+
         self.connect_object = AngelOneConnect()
         self.smart_api = self.connect_object.connect()
+
+    def update_context(self, key, value, subkey=None):
+        """Update monitoring context with new data"""
+        try:
+            if subkey:
+                if key not in self.monitoring_context:
+                    self.monitoring_context[key] = {}
+                self.monitoring_context[key][subkey] = value
+            else:
+                self.monitoring_context[key] = value
+        except Exception as e:
+            logging.error(f"Error updating context: {e}")
+
+    def get_context_summary(self):
+        """Get a summary of the current monitoring context"""
+        return {
+            'session_duration': str(datetime.now() - datetime.fromisoformat(self.monitoring_context['session_start_time'])),
+            'total_options_monitored': len(self.monitored_options),
+            'active_positions': len(self.entered_positions),
+            'completed_positions': len(self.completed_positions),
+            'alerts_sent': self.monitoring_context['total_alerts_sent'],
+            'alerts_breakdown': self.monitoring_context['alerts_by_type'],
+            'system_health': {
+                'webSocket_connected': self.is_ws_connected,
+                'alert_workers_active': len([t for t in self.alert_threads if t.is_alive()]),
+                'current_queue_size': self.alert_queue.qsize(),
+                'memory_usage': len(self.token_map)
+            }
+        }
+
+    def is_position_active(self, unique_id: str) -> bool:
+        """Check if position is still active (not completed)"""
+        return unique_id in self.entered_positions and unique_id not in self.completed_positions
+
+    def mark_position_completed(self, unique_id: str, exit_type: str):
+        """Mark a position as completed and update context"""
+        if unique_id in self.entered_positions:
+            self.completed_positions.add(unique_id)
+            
+            # Update context
+            self.update_context('completed_positions', len(self.completed_positions), 'position_management')
+            self.update_context('active_positions', len(self.entered_positions) - len(self.completed_positions), 'position_management')
+            
+            if exit_type == 'target':
+                self.update_context('profitable_exits', 
+                                  self.monitoring_context['position_management']['profitable_exits'] + 1, 
+                                  'position_management')
+                logging.info(f"✅ Position {unique_id} completed with TARGET (Profit)")
+            elif exit_type == 'stoploss':
+                self.update_context('loss_exits', 
+                                  self.monitoring_context['position_management']['loss_exits'] + 1, 
+                                  'position_management')
+                logging.info(f"🛑 Position {unique_id} completed with STOPLOSS (Loss)")
 
     def load_analysis_data(self, json_file_path: str):
         """Load analysis data from JSON file"""
@@ -91,7 +175,7 @@ class ParallelOptionMonitor:
                     token = ce_option.get('token')
                     
                     if token and str(token).strip():
-                        # NEW: Check for gap up condition
+                        # Check for gap up condition
                         day_open = ce_option.get('option_ohlc', {}).get('day_open', 0)
                         buy_entry = ce_option.get('trading_levels', {}).get('buy_entry', 0)
                         
@@ -106,6 +190,7 @@ class ParallelOptionMonitor:
                         ce_option['option_type'] = 'CE'
                         ce_option['unique_id'] = f"{ce_option['symbol']}_{ce_option['option_type']}"
                         ce_option['alert_key'] = f"{ce_option['symbol']}_{ce_option['option_type']}"
+                        ce_option['loaded_time'] = datetime.now().isoformat()
                         self.monitored_options.append(ce_option)
                         
                         # Add to token map for WebSocket
@@ -118,14 +203,12 @@ class ParallelOptionMonitor:
                     token = pe_option.get('token')
                     
                     if token and str(token).strip():
-                        # NEW: Check for gap up condition
+                        # Check for gap up condition
                         day_open = pe_option.get('option_ohlc', {}).get('day_open', 0)
                         buy_entry = pe_option.get('trading_levels', {}).get('buy_entry', 0)
                         
                         if day_open > buy_entry:
                             logging.info(f"⏩ Skipping {pe_option.get('symbol')} - Gap up detected (Open: {day_open} > Entry: {buy_entry})")
-                            send_telegram_message(f"""⏩ *Skipping* {pe_option.get('symbol')} - 
-                                                  *Gap up detected* (Open: {day_open} > Entry: {buy_entry})""")
                             skipped_gap_up += 1
                             continue
                         
@@ -135,11 +218,17 @@ class ParallelOptionMonitor:
                         pe_option['option_type'] = 'PE'
                         pe_option['unique_id'] = f"{pe_option['symbol']}_{pe_option['option_type']}"
                         pe_option['alert_key'] = f"{pe_option['symbol']}_{pe_option['option_type']}"
+                        pe_option['loaded_time'] = datetime.now().isoformat()
                         self.monitored_options.append(pe_option)
                         
                         # Add to token map for WebSocket
                         self.token_map[token] = pe_option
                         valid_tokens += 1
+            
+            # Update context with loading statistics
+            self.update_context('options_loaded', len(self.monitored_options))
+            self.update_context('gap_up_skipped', skipped_gap_up)
+            self.update_context('valid_tokens', valid_tokens)
             
             logging.info(f"Monitoring {len(self.monitored_options)} options")
             logging.info(f"Skipped {skipped_gap_up} options due to gap up")
@@ -180,6 +269,9 @@ class ParallelOptionMonitor:
                 option_data = alert_data['option_data']
                 current_ltp = alert_data['current_ltp']
                 
+                # Track alert processing start time
+                processing_start = time.time()
+                
                 # Process alert based on type
                 if alert_type == 'entry':
                     self.send_entry_alert(option_data, current_ltp)
@@ -187,6 +279,17 @@ class ParallelOptionMonitor:
                     self.send_target_alert(option_data, current_ltp)
                 elif alert_type == 'stoploss':
                     self.send_stoploss_alert(option_data, current_ltp)
+                
+                # Update context with alert metrics
+                processing_time = time.time() - processing_start
+                self.update_context('total_alerts_sent', self.monitoring_context['total_alerts_sent'] + 1)
+                self.update_context('alerts_by_type', self.monitoring_context['alerts_by_type'][alert_type] + 1, alert_type)
+                
+                # Update performance metrics
+                current_avg = self.monitoring_context['performance_metrics']['avg_alert_processing_time']
+                total_alerts = self.monitoring_context['total_alerts_sent']
+                new_avg = ((current_avg * (total_alerts - 1)) + processing_time) / total_alerts
+                self.update_context('avg_alert_processing_time', new_avg, 'performance_metrics')
                 
                 self.alert_queue.task_done()
                 
@@ -229,7 +332,16 @@ class ParallelOptionMonitor:
         
         if send_telegram_message(message):
             self.alerted_entries.add(unique_id)
-            self.entered_positions.add(unique_id)  # NEW: Mark as entered position
+            self.entered_positions.add(unique_id)
+            
+            # Update context with position entry
+            self.update_context('trading_session', {
+                **self.monitoring_context['trading_session'],
+                'last_entry_time': datetime.now().isoformat(),
+                'active_positions_count': len(self.entered_positions)
+            })
+            self.update_context('active_positions', len(self.entered_positions), 'position_management')
+            
             logging.info(f"PARALLEL Entry alert sent for {option_symbol}")
 
     def send_target_alert(self, option_data: Dict, current_ltp: float):
@@ -263,6 +375,8 @@ class ParallelOptionMonitor:
         
         if send_telegram_message(message):
             self.alerted_targets.add(unique_id)
+            # Mark position as completed when target is hit
+            self.mark_position_completed(unique_id, 'target')
             logging.info(f"PARALLEL Target hit for {option_symbol}")
 
     def send_stoploss_alert(self, option_data: Dict, current_ltp: float):
@@ -296,11 +410,18 @@ class ParallelOptionMonitor:
         
         if send_telegram_message(message):
             self.alerted_stoploss.add(unique_id)
+            # Mark position as completed when stoploss is hit
+            self.mark_position_completed(unique_id, 'stoploss')
             logging.info(f"PARALLEL Stoploss hit for {option_symbol}")
 
     def on_data(self, wsapp, message):
         """Callback function for WebSocket data - PARALLEL PROCESSING"""
         try:
+            # Update data points counter
+            self.update_context('total_data_points', 
+                              self.monitoring_context['performance_metrics']['total_data_points'] + 1,
+                              'performance_metrics')
+            
             if 'token' in message:
                 # Extract token from message
                 full_token = message['token']
@@ -349,7 +470,8 @@ class ParallelOptionMonitor:
         
         # Check for BUY ENTRY trigger
         if (current_ltp >= buy_entry and 
-            unique_id not in self.alerted_entries):
+            unique_id not in self.alerted_entries and
+            unique_id not in self.completed_positions):  # Don't trigger entry if already completed
             
             alert_data = {
                 'type': 'entry',
@@ -359,12 +481,25 @@ class ParallelOptionMonitor:
             }
             self.alert_queue.put(alert_data)
             self.last_alert_time[alert_key] = current_time
+            
+            # Update queue size metrics
+            current_queue_size = self.alert_queue.qsize()
+            max_queue_size = self.monitoring_context['performance_metrics']['max_queue_size']
+            if current_queue_size > max_queue_size:
+                self.update_context('max_queue_size', current_queue_size, 'performance_metrics')
         
-        # NEW LOGIC: Only check target and stoploss if position was entered
-        elif unique_id in self.entered_positions:
-            # Check for TARGET hit (only if position was entered)
+        # Only check target and stoploss if position was entered AND not completed
+        elif (unique_id in self.entered_positions and 
+              unique_id not in self.completed_positions):  # Check if position is still active
+            
+            # MUTUAL EXCLUSION LOGIC: Check if position is already completed
+            if unique_id in self.completed_positions:
+                return  # Position already completed, no further checks
+            
+            # Check for TARGET hit (only if position is active and not completed)
             if (current_ltp >= target and 
-                unique_id not in self.alerted_targets):
+                unique_id not in self.alerted_targets and
+                unique_id not in self.alerted_stoploss):  # Don't trigger target if stoploss already hit
                 
                 alert_data = {
                     'type': 'target',
@@ -375,9 +510,10 @@ class ParallelOptionMonitor:
                 self.alert_queue.put(alert_data)
                 self.last_alert_time[alert_key] = current_time
             
-            # Check for STOPLOSS hit (only if position was entered)
+            # Check for STOPLOSS hit (only if position is active and not completed)
             elif (current_ltp <= stoploss and 
-                  unique_id not in self.alerted_stoploss):
+                  unique_id not in self.alerted_stoploss and
+                  unique_id not in self.alerted_targets):  # Don't trigger stoploss if target already hit
                 
                 alert_data = {
                     'type': 'stoploss',
@@ -393,27 +529,57 @@ class ParallelOptionMonitor:
         logging.info("WebSocket connection opened successfully")
         self.is_ws_connected = True
         
+        # Update context with connection info
+        self.update_context('webSocket_reconnects', 
+                          self.monitoring_context['webSocket_reconnects'] + 1)
+        self.update_context('trading_session', {
+            **self.monitoring_context['trading_session'],
+            'last_sync_time': datetime.now().isoformat(),
+            'market_status': 'CONNECTED'
+        })
+        
         # Start alert workers when WebSocket connects
         self.start_alert_workers()
         
-        connection_msg = (
-            f"*PARALLEL MONITORING STARTED*\n"
-            f"Real-time monitoring for {len(self.monitored_options)} options!\n"
-            f"Active subscriptions: {len(self.token_map)}\n"
-            f"Alert workers: {self.max_alert_workers}\n"
-            f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        )
+        connection_msg = f"""
+*PARALLEL MONITORING STARTED*
+
+*Monitoring Status:* ACTIVE
+*Options Tracked:* {len(self.monitored_options)}/{len(self.monitored_options)}
+*Alert Workers:* {self.max_alert_workers}
+*Queue Size:* {self.alert_queue.qsize()}
+*Messages Sent:* {self.message_count}
+
+*Alerts Triggered:*
+   • Entries: {len(self.alerted_entries)}
+   • Targets: {len(self.alerted_targets)}
+   • Stoploss: {len(self.alerted_stoploss)}
+
+*Active Positions:* {len(self.entered_positions)}
+
+*Report Time:* {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+*All systems running in parallel*
+"""
         send_telegram_message_admin(connection_msg)
 
     def on_error(self, wsapp, error):
         """Callback function for WebSocket error"""
         logging.error(f"WebSocket error: {error}")
         self.is_ws_connected = False
+        self.update_context('trading_session', {
+            **self.monitoring_context['trading_session'],
+            'market_status': 'DISCONNECTED'
+        })
 
     def on_close(self, wsapp):
         """Callback function for WebSocket close"""
         logging.warning("WebSocket connection closed")
         self.is_ws_connected = False
+        self.update_context('trading_session', {
+            **self.monitoring_context['trading_session'],
+            'market_status': 'CLOSED'
+        })
 
     def start_websocket_monitoring(self):
         """Start WebSocket V2 monitoring for real-time data"""
@@ -433,7 +599,7 @@ class ParallelOptionMonitor:
                 logging.error("Could not get JWT token")
                 return False
             
-            # CORRECTED: Prepare token list in EXACT format expected by SmartAPI
+            # Prepare token list in EXACT format expected by SmartAPI
             nfo_tokens = []
             for token in self.token_map.keys():
                 # Just collect the numeric tokens
@@ -443,7 +609,7 @@ class ParallelOptionMonitor:
                     logging.warning(f"Reached maximum token limit ({self.max_ws_tokens})")
                     break
             
-            # CORRECTED: Format for SmartWebSocketV2
+            # Format for SmartWebSocketV2
             token_list = [
                 {
                     "exchangeType": 2,  # 2 = NFO, 1 = NSE, 13 = BSE
@@ -480,7 +646,7 @@ class ParallelOptionMonitor:
             # Wait for connection to establish
             time.sleep(3)
             
-            # CORRECTED: Subscribe with proper parameters
+            # Subscribe with proper parameters
             if self.is_ws_connected:
                 try:
                     # SmartWebSocketV2.subscribe(correlation_id, mode, token_list)
@@ -525,31 +691,68 @@ class ParallelOptionMonitor:
         logging.info("Health monitor started")
 
     def send_health_report(self):
-        """Send parallel system health report"""
+        """Send enhanced health report with context information"""
         active_options = sum(1 for ltp in self.last_ltp.values() if ltp > 0)
         queue_size = self.alert_queue.qsize()
         
+        context_summary = self.get_context_summary()
+        
         message = f"""
-*PARALLEL SYSTEM HEALTH REPORT*
+*ENHANCED SYSTEM HEALTH REPORT*
 
 *Monitoring Status:* ACTIVE
+*Session Duration:* {context_summary['session_duration']}
 *Options Tracked:* {active_options}/{len(self.monitored_options)}
 *Alert Workers:* {self.max_alert_workers}
 *Queue Size:* {queue_size}
 *Messages Sent:* {self.message_count}
+
+*Performance Metrics:*
+   • Avg Alert Time: {self.monitoring_context['performance_metrics']['avg_alert_processing_time']:.3f}s
+   • Max Queue Size: {self.monitoring_context['performance_metrics']['max_queue_size']}
+   • Data Points: {self.monitoring_context['performance_metrics']['total_data_points']}
+
+*Position Management:*
+   • Active Positions: {self.monitoring_context['position_management']['active_positions']}
+   • Completed Positions: {self.monitoring_context['position_management']['completed_positions']}
+   • Profitable Exits: {self.monitoring_context['position_management']['profitable_exits']}
+   • Loss Exits: {self.monitoring_context['position_management']['loss_exits']}
+
+*Trading Session:*
+   • WebSocket: {'CONNECTED' if self.is_ws_connected else 'DISCONNECTED'}
+   • Last Sync: {self.monitoring_context['trading_session']['last_sync_time'] or 'N/A'}
 
 *Alerts Triggered:*
    • Entries: {len(self.alerted_entries)}
    • Targets: {len(self.alerted_targets)}
    • Stoploss: {len(self.alerted_stoploss)}
 
-*Active Positions:* {len(self.entered_positions)}
-
 *Report Time:* {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-*All systems running in parallel*
         """
+        
         send_telegram_message_admin(message)
+        self.update_context('last_health_report', datetime.now().isoformat())
+
+    def save_context_snapshot(self):
+        """Save current context to file for persistence"""
+        try:
+            snapshot = {
+                'timestamp': datetime.now().isoformat(),
+                'context': self.monitoring_context,
+                'active_positions': list(self.entered_positions),
+                'completed_positions': list(self.completed_positions),
+                'alerted_entries': list(self.alerted_entries),
+                'alerted_targets': list(self.alerted_targets),
+                'alerted_stoploss': list(self.alerted_stoploss)
+            }
+            
+            filename = f"context_snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            with open(filename, 'w') as f:
+                json.dump(snapshot, f, indent=2)
+            
+            logging.info(f"Context snapshot saved: {filename}")
+        except Exception as e:
+            logging.error(f"Error saving context snapshot: {e}")
 
     def start_live_monitoring(self):
         """Start parallel live monitoring"""
@@ -593,6 +796,9 @@ class ParallelOptionMonitor:
         
         # Wait for alert queue to empty
         self.alert_queue.join()
+        
+        # Save final context snapshot
+        # self.save_context_snapshot()
         
         logging.info("Parallel monitoring stopped completely")
 
@@ -649,7 +855,6 @@ def main():
         
         monitor.start_live_monitoring()
         
-        logging.info(f"Monitoring error: {e}")
     except KeyboardInterrupt:
         logging.info("\nMonitoring stopped by user")
         monitor.stop_monitoring()

@@ -79,5 +79,11 @@ EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:10000/health || exit 1
 
-# Use shell form to expand environment variables
-CMD uvicorn src.stock_opt_api:app --host 0.0.0.0 --port ${PORT:-10000} --workers ${MAX_WORKERS:-1} --log-level ${LOG_LEVEL:-info} --proxy-headers --forwarded-allow-ips "*"
+# Use exec form with hardcoded values for Render compatibility
+CMD ["uvicorn", "src.stock_opt_api:app", \
+     "--host", "0.0.0.0", \
+     "--port", "10000", \
+     "--workers", "1", \
+     "--log-level", "info", \
+     "--proxy-headers", \
+     "--forwarded-allow-ips", "*"]
