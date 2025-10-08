@@ -483,7 +483,7 @@ class UpdateStockOptData:
         # Save results to JSON
         if results:
             timestamp = datetime.now().strftime("%A_%Y-%m-%d")
-            filename = f"stock_interaday_json/stock_interaday_analysis_{timestamp}.json"
+            filename = f"stock_interaday_json/stock_interaday_analysis.json"
             
             output_data = {
                 'analysis_time': datetime.now().isoformat(),

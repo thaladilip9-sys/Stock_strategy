@@ -828,9 +828,11 @@ def main():
     # Initialize monitor
     monitor = ParallelOptionMonitor()
     # Find latest analysis file
-    latest_file = monitor.find_latest_analysis_file()
-    if not latest_file:
-        return
+    # latest_file = monitor.find_latest_analysis_file()
+    # if not latest_file:
+    #     return
+
+    latest_file = f"stock_interaday_json/stock_interaday_analysis.json"
     
     # Load analysis data
     if not monitor.load_analysis_data(latest_file):

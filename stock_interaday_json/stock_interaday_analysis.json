@@ -1,0 +1,551 @@
+{
+    "analysis_time": "2025-10-08T22:20:13.863152",
+    "min_price_filter": 1000,
+    "stocks_analyzed": 8,
+    "results": [
+        {
+            "stock": {
+                "token": "10738",
+                "symbol": "OFSS-EQ",
+                "name": "OFSS",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "50.000000"
+            },
+            "historical": {
+                "open": 9270.0,
+                "high": 9315.0,
+                "low": 9103.0,
+                "close": 9189.5,
+                "volume": 165216.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "OFSS28OCT259300CE",
+                    "token": "108299",
+                    "strike": 9300.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "75",
+                    "ltp": 249.3,
+                    "option_ohlc": {
+                        "day_high": 306.15,
+                        "day_low": 207.5,
+                        "day_open": 290.65,
+                        "day_close": 249.3
+                    },
+                    "trading_levels": {
+                        "buy_entry": 306.16,
+                        "target": 321.46,
+                        "stoploss": 290.84,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 28.94,
+                        "downside_risk": -16.66
+                    }
+                },
+                "pe": {
+                    "symbol": "OFSS28OCT259400PE",
+                    "token": "114744",
+                    "strike": 9400.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "75",
+                    "ltp": 361.6,
+                    "option_ohlc": {
+                        "day_high": 402.95,
+                        "day_low": 310.95,
+                        "day_open": 311.0,
+                        "day_close": 361.6
+                    },
+                    "trading_levels": {
+                        "buy_entry": 402.96,
+                        "target": 423.1,
+                        "stoploss": 382.8,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 17.01,
+                        "downside_risk": -5.86
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "11195",
+                "symbol": "INDIGO-EQ",
+                "name": "INDIGO",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "50.000000"
+            },
+            "historical": {
+                "open": 5637.5,
+                "high": 5683.5,
+                "low": 5625.0,
+                "close": 5635.0,
+                "volume": 386534.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "INDIGO28OCT255650CE",
+                    "token": "118363",
+                    "strike": 5650.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "150",
+                    "ltp": 107.55,
+                    "option_ohlc": {
+                        "day_high": 139.0,
+                        "day_low": 107.25,
+                        "day_open": 124.0,
+                        "day_close": 107.55
+                    },
+                    "trading_levels": {
+                        "buy_entry": 139.01,
+                        "target": 145.95,
+                        "stoploss": 132.05,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 35.7,
+                        "downside_risk": -22.78
+                    }
+                },
+                "pe": {
+                    "symbol": "INDIGO28OCT255700PE",
+                    "token": "92054",
+                    "strike": 5700.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "150",
+                    "ltp": 131.8,
+                    "option_ohlc": {
+                        "day_high": 135.0,
+                        "day_low": 101.75,
+                        "day_open": 120.6,
+                        "day_close": 131.8
+                    },
+                    "trading_levels": {
+                        "buy_entry": 135.01,
+                        "target": 141.75,
+                        "stoploss": 128.25,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 7.55,
+                        "downside_risk": 2.69
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "21174",
+                "symbol": "CDSL-EQ",
+                "name": "CDSL",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1559.9,
+                "high": 1571.0,
+                "low": 1535.0,
+                "close": 1539.7,
+                "volume": 1327054.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "CDSL28OCT251560CE",
+                    "token": "75138",
+                    "strike": 1560.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "475",
+                    "ltp": 33.9,
+                    "option_ohlc": {
+                        "day_high": 51.35,
+                        "day_low": 32.3,
+                        "day_open": 48.8,
+                        "day_close": 33.9
+                    },
+                    "trading_levels": {
+                        "buy_entry": 51.36,
+                        "target": 53.92,
+                        "stoploss": 48.78,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 59.05,
+                        "downside_risk": -43.9
+                    }
+                },
+                "pe": {
+                    "symbol": "CDSL28OCT251580PE",
+                    "token": "72372",
+                    "strike": 1580.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "475",
+                    "ltp": 63.15,
+                    "option_ohlc": {
+                        "day_high": 65.75,
+                        "day_low": 44.6,
+                        "day_open": 45.05,
+                        "day_close": 63.15
+                    },
+                    "trading_levels": {
+                        "buy_entry": 65.76,
+                        "target": 69.04,
+                        "stoploss": 62.46,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 9.32,
+                        "downside_risk": 1.09
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "4963",
+                "symbol": "ICICIBANK-EQ",
+                "name": "ICICIBANK",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 1372.3,
+                "high": 1381.6,
+                "low": 1364.3,
+                "close": 1370.3,
+                "volume": 8100832.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "ICICIBANK28OCT251380CE",
+                    "token": "93066",
+                    "strike": 1380.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "700",
+                    "ltp": 21.35,
+                    "option_ohlc": {
+                        "day_high": 27.6,
+                        "day_low": 19.8,
+                        "day_open": 23.0,
+                        "day_close": 21.35
+                    },
+                    "trading_levels": {
+                        "buy_entry": 27.61,
+                        "target": 28.98,
+                        "stoploss": 26.22,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 35.74,
+                        "downside_risk": -22.81
+                    }
+                },
+                "pe": {
+                    "symbol": "ICICIBANK28OCT251390PE",
+                    "token": "88998",
+                    "strike": 1390.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "700",
+                    "ltp": 30.95,
+                    "option_ohlc": {
+                        "day_high": 33.05,
+                        "day_low": 23.95,
+                        "day_open": 28.6,
+                        "day_close": 30.95
+                    },
+                    "trading_levels": {
+                        "buy_entry": 33.06,
+                        "target": 34.7,
+                        "stoploss": 31.4,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 12.12,
+                        "downside_risk": -1.45
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "18457",
+                "symbol": "POWERINDIA-EQ",
+                "name": "POWERINDIA",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "100.000000"
+            },
+            "historical": {
+                "open": 17650.0,
+                "high": 18193.0,
+                "low": 17549.0,
+                "close": 17794.0,
+                "volume": 101548.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "POWERINDIA28OCT2518000CE",
+                    "token": "142573",
+                    "strike": 18000.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "50",
+                    "ltp": 562.7,
+                    "option_ohlc": {
+                        "day_high": 789.85,
+                        "day_low": 455.0,
+                        "day_open": 500.0,
+                        "day_close": 562.7
+                    },
+                    "trading_levels": {
+                        "buy_entry": 789.86,
+                        "target": 829.34,
+                        "stoploss": 750.36,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 47.39,
+                        "downside_risk": -33.35
+                    }
+                },
+                "pe": {
+                    "symbol": "POWERINDIA28OCT2518250PE",
+                    "token": "142576",
+                    "strike": 18250.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "50",
+                    "ltp": 843.8,
+                    "option_ohlc": {
+                        "day_high": 843.8,
+                        "day_low": 843.8,
+                        "day_open": 843.8,
+                        "day_close": 843.8
+                    },
+                    "trading_levels": {
+                        "buy_entry": 843.81,
+                        "target": 885.99,
+                        "stoploss": 801.61,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 5.0,
+                        "downside_risk": 5.0
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "17818",
+                "symbol": "LTIM-EQ",
+                "name": "LTIM",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "50.000000"
+            },
+            "historical": {
+                "open": 5295.0,
+                "high": 5393.5,
+                "low": 5266.0,
+                "close": 5342.5,
+                "volume": 278405.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "LTIM28OCT255350CE",
+                    "token": "133371",
+                    "strike": 5350.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "150",
+                    "ltp": 155.05,
+                    "option_ohlc": {
+                        "day_high": 188.6,
+                        "day_low": 122.95,
+                        "day_open": 122.95,
+                        "day_close": 155.05
+                    },
+                    "trading_levels": {
+                        "buy_entry": 188.61,
+                        "target": 198.03,
+                        "stoploss": 179.17,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 27.72,
+                        "downside_risk": -15.56
+                    }
+                },
+                "pe": {
+                    "symbol": "LTIM28OCT255400PE",
+                    "token": "105939",
+                    "strike": 5400.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "150",
+                    "ltp": 183.45,
+                    "option_ohlc": {
+                        "day_high": 195.35,
+                        "day_low": 165.25,
+                        "day_open": 191.35,
+                        "day_close": 183.45
+                    },
+                    "trading_levels": {
+                        "buy_entry": 195.36,
+                        "target": 205.12,
+                        "stoploss": 185.58,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 11.81,
+                        "downside_risk": -1.16
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "19585",
+                "symbol": "BSE-EQ",
+                "name": "BSE",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "10.000000"
+            },
+            "historical": {
+                "open": 2227.0,
+                "high": 2264.3,
+                "low": 2210.0,
+                "close": 2244.2,
+                "volume": 3860482.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "BSE28OCT252250CE",
+                    "token": "70548",
+                    "strike": 2250.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 84.5,
+                    "option_ohlc": {
+                        "day_high": 103.55,
+                        "day_low": 75.25,
+                        "day_open": 88.3,
+                        "day_close": 84.5
+                    },
+                    "trading_levels": {
+                        "buy_entry": 103.56,
+                        "target": 108.73,
+                        "stoploss": 98.37,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 28.67,
+                        "downside_risk": -16.42
+                    }
+                },
+                "pe": {
+                    "symbol": "BSE28OCT252300PE",
+                    "token": "73748",
+                    "strike": 2300.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "375",
+                    "ltp": 119.35,
+                    "option_ohlc": {
+                        "day_high": 136.7,
+                        "day_low": 101.0,
+                        "day_open": 117.0,
+                        "day_close": 119.35
+                    },
+                    "trading_levels": {
+                        "buy_entry": 136.71,
+                        "target": 143.53,
+                        "stoploss": 129.86,
+                        "risk_reward_ratio": 1.0,
+                        "upside_potential": 20.26,
+                        "downside_risk": -8.81
+                    }
+                }
+            }
+        },
+        {
+            "stock": {
+                "token": "317",
+                "symbol": "BAJFINANCE-EQ",
+                "name": "BAJFINANCE",
+                "expiry": "",
+                "strike": "-1.000000",
+                "lotsize": "1",
+                "instrumenttype": "",
+                "exch_seg": "NSE",
+                "tick_size": "5.000000"
+            },
+            "historical": {
+                "open": 1012.05,
+                "high": 1028.0,
+                "low": 1012.05,
+                "close": 1023.15,
+                "volume": 4448915.0
+            },
+            "options": {
+                "ce": {
+                    "symbol": "BAJFINANCE28OCT251020CE",
+                    "token": "41348",
+                    "strike": 1020.0,
+                    "type": "CE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "750",
+                    "ltp": 26.55,
+                    "option_ohlc": {
+                        "day_high": 30.35,
+                        "day_low": 23.5,
+                        "day_open": 25.2,
+                        "day_close": 26.55
+                    },
+                    "trading_levels": {
+                        "buy_entry": 30.36,
+                        "target": 31.87,
+                        "stoploss": 28.83,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 20.03,
+                        "downside_risk": -8.6
+                    }
+                },
+                "pe": {
+                    "symbol": "BAJFINANCE28OCT251030PE",
+                    "token": "61044",
+                    "strike": 1030.0,
+                    "type": "PE",
+                    "expiry": "28OCT2025",
+                    "lotsize": "750",
+                    "ltp": 26.35,
+                    "option_ohlc": {
+                        "day_high": 29.1,
+                        "day_low": 23.4,
+                        "day_open": 26.75,
+                        "day_close": 26.35
+                    },
+                    "trading_levels": {
+                        "buy_entry": 29.11,
+                        "target": 30.56,
+                        "stoploss": 27.64,
+                        "risk_reward_ratio": 0.99,
+                        "upside_potential": 15.96,
+                        "downside_risk": -4.91
+                    }
+                }
+            }
+        }
+    ]
+}
